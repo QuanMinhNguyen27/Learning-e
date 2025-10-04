@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning App Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, button { padding: 8px; margin: 5px 0; }
+        button { background: #16a085; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #138d75; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>English Learning App - Backend Test</h1>
+        
+        <h2>1. Register User</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="regEmail" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="regPassword" value="password123">
+        </div>
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="regName" value="Test User">
+        </div>
+        <button onclick="register()">Register</button>
+        <div id="registerResult" class="result"></div>
+
+        <h2>2. Login</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="loginEmail" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="loginPassword" value="password123">
+        </div>
+        <button onclick="login()">Login</button>
+        <div id="loginResult" class="result"></div>
+
+        <h2>3. Add Vocabulary Word</h2>
+        <div class="form-group">
+            <label>Word:</label>
+            <input type="text" id="word" value="hello">
+        </div>
+        <div class="form-group">
+            <label>Definition:</label>
+            <input type="text" id="definition" value="a greeting">
+        </div>
+        <div class="form-group">
+            <label>Example:</label>
+            <input type="text" id="example" value="Hello, how are you?">
+        </div>
+        <div class="form-group">
+            <label>Difficulty:</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        <button onclick="addVocab()">Add Word</button>
+        <div id="vocabResult" class="result"></div>
+
+        <h2>4. Get Definition from Dictionary</h2>
+        <div class="form-group">
+            <label>Word to define:</label>
+            <input type="text" id="dictWord" value="hello">
+        </div>
+        <button onclick="getDefinition()">Get Definition</button>
+        <div id="definitionResult" class="result"></div>
+
+        <h2>5. List Vocabulary Words</h2>
+        <button onclick="listVocab()">List Words</button>
+        <div id="listResult" class="result"></div>
+    </div>
+
+    <script>
+        let token = '';
+
+        async function register() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const name = document.getElementById('regName').value;
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, name })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('registerResult').innerHTML = 
+                        `<div class="success">Registration successful! User ID: ${data.user.id}</div>`;
+                } else {
+                    document.getElementById('registerResult').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('registerResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="success">Login successful! Token received.</div>`;
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function addVocab() {
+            if (!token) {
+                document.getElementById('vocabResult').innerHTML = 
+                    `<div class="error">Please login first!</div>`;
+                return;
+            }
+
+            const word = document.getElementById('word').value;
+            const definition = document.getElementById('definition').value;
+            const example = document.getElementById('example').value;
+            const difficulty = document.getElementById('difficulty').value;
+            
+            try {
+                const response = await fetch('/api/vocab', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ word, definition, example, difficulty })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('vocabResult').innerHTML = 
+                        `<div class="success">Word added successfully! ID: ${data.id}</div>`;
+                } else {
+                    document.getElementById('vocabResult').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('vocabResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getDefinition() {
+            const word = document.getElementById('dictWord').value;
+            
+            try {
+                const response = await fetch(`/api/auth/dictionary/${word}`);
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('definitionResult').innerHTML = 
+                        `<div class="success">
+                            <strong>${data.word}</strong><br>
+                            <strong>Definition:</strong> ${data.definition}<br>
+                            <strong>Part of Speech:</strong> ${data.partOfSpeech}<br>
+                            <strong>Pronunciation:</strong> ${data.pronunciation}<br>
+                            <strong>Source:</strong> ${data.source}
+                        </div>`;
+                } else {
+                    document.getElementById('definitionResult').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('definitionResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function listVocab() {
+            if (!token) {
+                document.getElementById('listResult').innerHTML = 
+                    `<div class="error">Please login first!</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/vocab', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (data.length === 0) {
+                        document.getElementById('listResult').innerHTML = 
+                            `<div class="success">No vocabulary words found.</div>`;
+                    } else {
+                        let html = '<div class="success"><strong>Your Vocabulary Words:</strong><br>';
+                        data.forEach(word => {
+                            html += `<br><strong>${word.word}</strong> - ${word.definition}<br>`;
+                            html += `Example: ${word.example}<br>`;
+                            html += `Difficulty: ${word.difficulty}<br>`;
+                        });
+                        html += '</div>';
+                        document.getElementById('listResult').innerHTML = html;
+                    }
+                } else {
+                    document.getElementById('listResult').innerHTML = 
+                        `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('listResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

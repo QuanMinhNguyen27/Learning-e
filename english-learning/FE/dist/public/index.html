@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .navbar { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .nav-links { display: flex; gap: 10px; }
+        .nav-links a { color: #2c3e50; text-decoration: none; padding: 12px 20px; border-radius: 25px; transition: all 0.3s; background: #f8f9fa; font-weight: 500; }
+        .nav-links a:hover { background: #e9ecef; transform: translateY(-2px); }
+        .nav-links a.active { background: #16a085; color: white; }
+        .user-info { color: #2c3e50; display: flex; align-items: center; gap: 15px; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+        .page { 
+            display: none; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .page.active { 
+            display: block; 
+            opacity: 1;
+        }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #16a085; }
+        .btn { background: #16a085; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s; }
+        .btn:hover { background: #138d75; transform: translateY(-2px); }
+        .btn-secondary { background: #95a5a6; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .word-card { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .word-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .word-title { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .word-actions { display: flex; gap: 10px; }
+        .action-btn { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .action-btn:hover { background: #2980b9; }
+        .definition-section { background: #e8f5e8; border-left: 4px solid #16a085; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0; }
+        .loading { text-align: center; color: #7f8c8d; font-style: italic; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 6px; margin: 10px 0; }
+        
+        /* Watching Page Styles */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #16a085;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .content-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .content-filters .btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .content-filters .btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        .content-filters .btn.active {
+            background: #16a085;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-color: #16a085;
+        }
+        .content-thumbnail {
+            height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            position: relative;
+        }
+        .content-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .content-info {
+            padding: 20px;
+        }
+        .content-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        .content-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .content-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .content-type {
+            background: #e8f5e8;
+            color: #16a085;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .content-difficulty {
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .flashcard { background: white; border-radius: 15px; padding: 40px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin: 20px 0; min-height: 300px; display: flex; flex-direction: column; justify-content: center; }
+        .flashcard-word { font-size: 36px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+        .flashcard-definition { font-size: 18px; color: #7f8c8d; margin-bottom: 20px; }
+        .flashcard-example { font-size: 16px; color: #95a5a6; font-style: italic; }
+        .quiz-question { background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .quiz-option { background: white; border: 2px solid #ddd; border-radius: 8px; padding: 15px; cursor: pointer; transition: all 0.3s; }
+        .quiz-option:hover { border-color: #16a085; background: #f0f9f6; }
+        .quiz-option.selected { border-color: #16a085; background: #e8f5e8; }
+        .quiz-option.correct { border-color: #27ae60; background: #d5f4e6; }
+        .quiz-option.incorrect { border-color: #e74c3c; background: #fadbd8; }
+        .progress-bar { background: #ecf0f1; border-radius: 10px; height: 20px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { background: #16a085; height: 100%; transition: width 0.3s; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-links">
+                <a href="#" onclick="showPage('dashboard')" class="nav-link active">Dashboard</a>
+                <a href="#" onclick="showPage('vocab-bank')" class="nav-link">Vocab Bank</a>
+                <a href="#" onclick="showPage('watching')" class="nav-link">Watching</a>
+                <a href="#" onclick="showPage('flashcard')" class="nav-link">Flashcards</a>
+                <a href="#" onclick="showPage('quiz')" class="nav-link">Quiz</a>
+                <a href="#" onclick="showPage('profile')" class="nav-link">Profile</a>
+            </div>
+            <div class="user-info">
+                <span id="userName">Guest</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <h1>Welcome back <span id="dashboardUserName">Guest</span>! 👋</h1>
+            <p style="color: #7f8c8d; margin-bottom: 30px;">Check your stats and vocabulary progress</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="thisWeekWords">27</div>
+                    <div class="stat-label">This Week's Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="leaderboardRank">#4</div>
+                    <div class="stat-label">Rank on Leaderboard</div>
+                </div>
+            </div>
+            
+            <div id="unlockQuizSection" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; margin: 30px 0; color: white;">
+                <h3 style="margin-bottom: 15px;">🔒 Unlock Quiz Mode</h3>
+                <p style="margin-bottom: 15px;">Collect 10 words to unlock quiz mode and test your knowledge!</p>
+                <div class="progress-bar" style="background: rgba(255,255,255,0.3); margin: 15px 0;">
+                    <div class="progress-fill" style="background: #ffd700; width: 0%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span>0 / 10 words</span>
+                    <span>0% complete</span>
+                </div>
+                <button class="btn" style="background: #764ba2; border: 2px solid white;">🔒 Need 10 more words</button>
+            </div>
+            
+            <!-- Success message when quiz is unlocked -->
+            <div id="quizUnlockedMessage" style="display: none; background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); border-radius: 15px; padding: 25px; margin: 30px 0; color: white; text-align: center;">
+                <h3 style="margin-bottom: 15px;">🎉 Quiz Mode Unlocked!</h3>
+                <p style="margin-bottom: 20px;">Congratulations! You've collected 10 words and unlocked quiz mode.</p>
+                <button class="btn" onclick="showPage('quiz')" style="background: white; color: #27ae60; border: 2px solid white; font-weight: bold;">🚀 Start Quiz Now!</button>
+            </div>
+        </div>
+
+        <!-- Vocabulary Bank Page -->
+        <div id="vocab-bank" class="page">
+                <button class="btn" onclick="stopCurrentMedia(); showPage('dashboard')" style="margin-bottom: 20px;">← Dashboard</button>
+            <h1>📚 Vocab Bank</h1>
+            
+            <div id="unlockQuizSectionVocab" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; margin: 20px 0; color: white;">
+                <h3 style="margin-bottom: 15px;">🔒 Unlock Quiz Mode</h3>
+                <p style="margin-bottom: 15px;">Collect 10 words to unlock quiz mode and test your knowledge!</p>
+                <div class="progress-bar" style="background: rgba(255,255,255,0.3); margin: 15px 0;">
+                    <div class="progress-fill" style="background: #ffd700; width: 0%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span>0 / 10 words</span>
+                    <span>0% complete</span>
+                </div>
+                <button class="btn" style="background: #764ba2; border: 2px solid white;">🔒 Need 10 more words</button>
+            </div>
+            
+            <!-- Success message when quiz is unlocked -->
+            <div id="quizUnlockedMessageVocab" style="display: none; background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); border-radius: 15px; padding: 25px; margin: 20px 0; color: white; text-align: center;">
+                <h3 style="margin-bottom: 15px;">🎉 Quiz Mode Unlocked!</h3>
+                <p style="margin-bottom: 20px;">Congratulations! You've collected 10 words and unlocked quiz mode.</p>
+                <button class="btn" onclick="showPage('quiz')" style="background: white; color: #27ae60; border: 2px solid white; font-weight: bold;">🚀 Start Quiz Now!</button>
+            </div>
+            
+            <div class="form-group">
+                <input type="text" id="searchWords" placeholder="Search words..." style="margin-bottom: 20px;">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 20px;">
+                <input type="text" id="newWord" placeholder="Word">
+                <input type="text" id="newDefinition" placeholder="English Definition (optional)">
+                <input type="text" id="newVietnameseDef" placeholder="Vietnamese Definition (optional)">
+                <input type="text" id="newExample" placeholder="Example">
+                <button class="btn" onclick="addWord()">Add Word</button>
+            </div>
+            
+            <div id="wordsList"></div>
+        </div>
+
+        <!-- Flashcards Page -->
+        <div id="flashcard" class="page">
+            <h1>🃏 Flashcards</h1>
+            <div id="flashcardContainer">
+                <div class="loading">Loading flashcards...</div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="previousCard()">← Previous</button>
+                <button class="btn" onclick="flipCard()">Flip Card</button>
+                <button class="btn" onclick="nextCard()">Next →</button>
+            </div>
+        </div>
+
+        <!-- Watching Page -->
+        <div id="watching" class="page">
+            <!-- Fixed header with admin button -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button class="btn" onclick="stopCurrentMedia(); showPage('dashboard')">← Dashboard</button>
+                <button id="adminDashboardBtn" class="btn" onclick="openAdminDashboard()" style="background: #e74c3c; display: none;">🎬 Admin Dashboard</button>
+            </div>
+            
+            <!-- Content Grid View -->
+            <div id="watchingContent">
+                <h1>📺 Watching</h1>
+                <p style="color: #7f8c8d; margin-bottom: 30px;">Continue your learning journey with videos and movies.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Watched Videos</div>
+                        <div style="font-size: 12px; margin-top: 5px;">+ 1 this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">Music Videos</div>
+                        <div class="stat-label">Favorite Genre</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Based on your activity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2 days</div>
+                        <div class="stat-label">Learning Streak</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Keep it up!</div>
+                    </div>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <button class="btn active" style="background: #16a085;" onclick="filterContent('all')">All Content</button>
+                        <button class="btn btn-secondary" onclick="filterContent('movies')">Movies</button>
+                        <button class="btn btn-secondary" onclick="filterContent('songs')">Songs</button>
+                    </div>
+                    
+                    <!-- Content Grid -->
+                    <div id="contentGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div class="content-card" onclick="playContent('perfect')" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; height: 150px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                                Perfect (Ed Sheeran)
+                            </div>
+                            <h3 style="margin-bottom: 10px;">Perfect (Ed Sheeran)</h3>
+                            <p style="color: #7f8c8d; font-size: 14px;">Music Video • 4:23</p>
+                        </div>
+                        
+                        <div class="content-card" onclick="playContent('see-you-again')" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s;">
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; height: 150px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                                See You Again
+                            </div>
+                            <h3 style="margin-bottom: 10px;">See You Again (Wiz Khalifa ft. Charlie Puth)</h3>
+                            <p style="color: #7f8c8d; font-size: 14px;">Music Video • 3:50</p>
+                        </div>
+                        
+                        <div class="content-card" onclick="playContent('sunspring')" style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s;">
+                            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 8px; height: 150px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                                Sunspring
+                            </div>
+                            <h3 style="margin-bottom: 10px;">Sunspring (Short Sci-Fi Film)</h3>
+                            <p style="color: #7f8c8d; font-size: 14px;">Short Film • 8:45</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Video Player View -->
+            <div id="videoPlayerView" style="display: none;">
+                <button class="btn" onclick="returnToContent()" style="margin-bottom: 20px;">← Back to Content</button>
+                <h1 id="videoPageTitle">📺 Video Player</h1>
+                
+                <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <!-- Video Player -->
+                    <div id="videoContainer" style="background: #000; border-radius: 10px; height: 400px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                        <div id="videoPlaceholder">Click play to start video</div>
+                    </div>
+                    
+                    <!-- Video Controls -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn" onclick="togglePlayPause()" id="playPauseBtn">▶️ Play</button>
+                        <button class="btn btn-secondary" onclick="toggleSubtitles()" id="subtitleBtn">📝 Show Lyrics</button>
+                    </div>
+                    
+                <!-- Lyrics/Script Section -->
+                <div id="lyricsSection" style="display: none;">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">📝 Lyrics & Script</h3>
+                    <div style="margin-bottom: 15px;">
+                        <button class="btn btn-secondary" onclick="saveHighlightedWord()" id="saveWordBtn" style="background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                            💾 Save Highlighted Word
+                        </button>
+                        <span id="saveWordStatus" style="margin-left: 10px; color: #7f8c8d; font-size: 14px;"></span>
+                    </div>
+                    <div id="lyricsContent" style="background: #f8f9fa; border-radius: 10px; padding: 20px; max-height: 300px; overflow-y: auto; line-height: 1.6; color: #2c3e50; user-select: text;">
+                        <!-- Lyrics will be loaded here -->
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                        💡 Tip: Highlight any word in the lyrics above and click "Save Highlighted Word" to add it to your vocabulary bank!
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quiz" class="page">
+            <h1>🎯 Quiz</h1>
+            <div id="quizContainer">
+                <div class="loading">Loading quiz...</div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profile" class="page">
+            <h1>👤 Profile</h1>
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="profileName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="profileEmail" readonly>
+            </div>
+            <div class="form-group">
+                <label>Member Since:</label>
+                <input type="text" id="memberSince" readonly>
+            </div>
+            <button class="btn" onclick="updateProfile()">Update Profile</button>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+        let currentUser = null;
+        let words = [];
+        let currentCardIndex = 0;
+        let cardFlipped = false;
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+
+        // Check if user is logged in
+        function checkAuth() {
+            const savedToken = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+            
+            if (savedToken && savedUser) {
+                try {
+                    token = savedToken;
+                    currentUser = JSON.parse(savedUser);
+                    document.getElementById('userName').textContent = currentUser.name;
+                    loadWords();
+                    loadQuiz();
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    // Clear invalid data and redirect
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    redirectToLogin();
+                }
+            } else {
+                redirectToLogin();
+            }
+        }
+        
+        function redirectToLogin() {
+            // Only redirect if we're not already on login page and not in a redirect loop
+            if (!window.location.pathname.includes('login.html') && !window.location.search.includes('redirected=true')) {
+                window.location.href = 'login.html?redirected=true';
+            }
+        }
+
+        // Navigation
+        function showPage(pageId) {
+            // Stop any playing media when navigating away from watching page
+            const currentPage = document.querySelector('.page.active');
+            if (currentPage && currentPage.id === 'watching') {
+                stopCurrentMedia();
+            }
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Load page-specific data
+            if (pageId === 'dashboard') {
+                loadDashboard();
+            } else if (pageId === 'vocab-bank') {
+                loadWords();
+            } else if (pageId === 'watching') {
+                loadWatching();
+            } else if (pageId === 'flashcard') {
+                loadFlashcards();
+            } else if (pageId === 'quiz') {
+                loadQuiz();
+            } else if (pageId === 'profile') {
+                loadProfile();
+            }
+        }
+
+        // Dashboard functions
+        function loadDashboard() {
+            if (currentUser) {
+                document.getElementById('dashboardUserName').textContent = currentUser.name;
+            }
+            document.getElementById('thisWeekWords').textContent = words.length + Math.floor(Math.random() * 20);
+            document.getElementById('leaderboardRank').textContent = '#' + Math.floor(Math.random() * 10);
+        }
+
+        function pronounceWord(word) {
+            // Use Web Speech API for pronunciation
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Speech synthesis not supported in this browser');
+            }
+        }
+
+        // Vocabulary functions
+        async function addWord() {
+            const word = document.getElementById('newWord').value;
+            const definition = document.getElementById('newDefinition').value;
+            const example = document.getElementById('newExample').value;
+            const difficulty = document.getElementById('newDifficulty').value;
+            
+            if (!word || !definition) {
+                alert('Please fill in word and definition');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/vocab', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ word, definition, example, difficulty })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('newWord').value = '';
+                    document.getElementById('newDefinition').value = '';
+                    document.getElementById('newExample').value = '';
+                    loadWords();
+                    updateQuizProgress();
+                } else {
+                    alert('Error adding word');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadWords() {
+            try {
+                const container = document.getElementById('wordsList');
+                if (container) {
+                    container.innerHTML = '<div class="loading">Loading vocabulary...</div>';
+                }
+                
+                const response = await fetch('/api/vocab', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                words = await response.json();
+                displayWords();
+                updateQuizProgress();
+            } catch (error) {
+                console.error('Error loading words:', error);
+                const container = document.getElementById('wordsList');
+                if (container) {
+                    container.innerHTML = '<div class="error">Error loading vocabulary. Please try again.</div>';
+                }
+            }
+        }
+
+        function updateQuizProgress() {
+            const wordCount = words ? words.length : 0;
+            const targetWords = 10;
+            const progress = Math.min((wordCount / targetWords) * 100, 100);
+            const remainingWords = Math.max(targetWords - wordCount, 0);
+            
+            if (wordCount >= targetWords) {
+                // Hide unlock quiz sections and show success messages
+                const unlockSection = document.getElementById('unlockQuizSection');
+                const unlockSectionVocab = document.getElementById('unlockQuizSectionVocab');
+                const successMessage = document.getElementById('quizUnlockedMessage');
+                const successMessageVocab = document.getElementById('quizUnlockedMessageVocab');
+                
+                if (unlockSection) unlockSection.style.display = 'none';
+                if (unlockSectionVocab) unlockSectionVocab.style.display = 'none';
+                if (successMessage) successMessage.style.display = 'block';
+                if (successMessageVocab) successMessageVocab.style.display = 'block';
+            } else {
+                // Show unlock sections and hide success messages
+                const unlockSection = document.getElementById('unlockQuizSection');
+                const unlockSectionVocab = document.getElementById('unlockQuizSectionVocab');
+                const successMessage = document.getElementById('quizUnlockedMessage');
+                const successMessageVocab = document.getElementById('quizUnlockedMessageVocab');
+                
+                if (unlockSection) unlockSection.style.display = 'block';
+                if (unlockSectionVocab) unlockSectionVocab.style.display = 'block';
+                if (successMessage) successMessage.style.display = 'none';
+                if (successMessageVocab) successMessageVocab.style.display = 'none';
+                
+                // Update progress bars
+                const progressBars = document.querySelectorAll('.progress-fill');
+                progressBars.forEach(bar => {
+                    bar.style.width = `${progress}%`;
+                });
+                
+                // Update text
+                const spans = document.querySelectorAll('.progress-bar').forEach(container => {
+                    const spans = container.parentElement.querySelectorAll('span');
+                    if (spans.length >= 2) {
+                        spans[0].textContent = `${wordCount} / ${targetWords} words`;
+                        spans[1].textContent = `${Math.round(progress)}% complete`;
+                    }
+                });
+                
+                // Update buttons
+                const buttons = document.querySelectorAll('.progress-bar').forEach(container => {
+                    const button = container.parentElement.querySelector('button');
+                    if (button) {
+                        button.innerHTML = `🔒 Need ${remainingWords} more words`;
+                        button.style.background = '#764ba2';
+                        button.onclick = null;
+                    }
+                });
+            }
+        }
+
+        function displayWords() {
+            const container = document.getElementById('wordsList');
+            if (words.length === 0) {
+                container.innerHTML = '<div class="loading">No words added yet. Add your first word above!</div>';
+                return;
+            }
+            
+            container.innerHTML = words.map((word, index) => `
+                <div class="word-card" style="background: #f8f9fa; border-left: 4px solid #16a085; border-radius: 0 10px 10px 0; padding: 20px; margin: 15px 0;">
+                    <div class="word-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <div class="word-title" style="font-size: 24px; font-weight: bold; color: #2c3e50;">${word.word}</div>
+                            ${word.pronunciation ? `<div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">${word.pronunciation}</div>` : ''}
+                        </div>
+                        <div class="word-actions" style="display: flex; gap: 10px;">
+                            <button class="action-btn" onclick="pronounceWord('${word.word}')" style="background: #16a085;">🔊</button>
+                            <button class="action-btn" onclick="getDefinition('${word.word}', ${index})" style="background: #16a085;">📖</button>
+                            <button class="action-btn" onclick="editWord(${index})" style="background: #95a5a6;">✏️</button>
+                        </div>
+                    </div>
+                    ${word.definition ? `
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #2c3e50;">English Definition:</strong>
+                            <div style="margin-top: 5px; color: #555;">${word.definition}</div>
+                        </div>
+                    ` : ''}
+                    ${word.synonyms ? `
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #2c3e50;">Synonyms:</strong>
+                            <div style="margin-top: 5px; color: #555;">${word.synonyms}</div>
+                        </div>
+                    ` : ''}
+                    ${word.example ? `
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #2c3e50;">Example:</strong>
+                            <div style="margin-top: 5px; color: #555; font-style: italic;">${word.example}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function getDefinition(word, index) {
+            try {
+                const response = await fetch(`/api/auth/dictionary/${word}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update the word with new definition
+                    words[index].definition = data.definition;
+                    words[index].partOfSpeech = data.partOfSpeech;
+                    words[index].pronunciation = data.pronunciation;
+                    words[index].synonyms = data.synonyms;
+                    displayWords();
+                } else {
+                    alert('Error getting definition: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function deleteWord(wordId) {
+            if (!confirm('Are you sure you want to delete this word?')) return;
+            
+            try {
+                const response = await fetch(`/api/vocab/${wordId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadWords();
+                } else {
+                    alert('Error deleting word');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Flashcard functions
+        function loadFlashcards() {
+            if (words.length === 0) {
+                document.getElementById('flashcardContainer').innerHTML = 
+                    '<div class="loading">No words available for flashcards. Add some words first!</div>';
+                return;
+            }
+            
+            currentCardIndex = 0;
+            cardFlipped = false;
+            showCurrentCard();
+        }
+
+        function showCurrentCard() {
+            const word = words[currentCardIndex];
+            const container = document.getElementById('flashcardContainer');
+            
+            container.innerHTML = `
+                <div class="flashcard">
+                    <div class="flashcard-word">${word.word}</div>
+                    ${word.partOfSpeech ? `<div style="color: #7f8c8d; font-style: italic;">${word.partOfSpeech}</div>` : ''}
+                    ${cardFlipped ? `
+                        <div class="flashcard-definition">${word.definition || 'No definition available'}</div>
+                        <div class="flashcard-example">${word.example || 'No example available'}</div>
+                    ` : `
+                        <div style="margin-top: 20px;">
+                            <button class="btn" onclick="getDefinition('${word.word}', ${currentCardIndex})">📖 Get Definition</button>
+                        </div>
+                    `}
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    Card ${currentCardIndex + 1} of ${words.length}
+                </div>
+            `;
+        }
+
+        function flipCard() {
+            cardFlipped = !cardFlipped;
+            showCurrentCard();
+        }
+
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                cardFlipped = false;
+                showCurrentCard();
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < words.length - 1) {
+                currentCardIndex++;
+                cardFlipped = false;
+                showCurrentCard();
+            }
+        }
+
+        // Quiz functions
+        function loadQuiz() {
+            if (words.length < 4) {
+                document.getElementById('quizContainer').innerHTML = 
+                    '<div class="loading">Need at least 4 words to create a quiz. Add more words first!</div>';
+                return;
+            }
+            
+            // Create quiz questions
+            quizQuestions = [];
+            const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < Math.min(5, shuffledWords.length); i++) {
+                const correctWord = shuffledWords[i];
+                const wrongWords = shuffledWords.filter(w => w.id !== correctWord.id).slice(0, 3);
+                const allOptions = [correctWord, ...wrongWords].sort(() => Math.random() - 0.5);
+                
+                quizQuestions.push({
+                    question: `What is the definition of "${correctWord.word}"?`,
+                    options: allOptions,
+                    correct: correctWord
+                });
+            }
+            
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            showCurrentQuestion();
+        }
+
+        function showCurrentQuestion() {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestionIndex];
+            const container = document.getElementById('quizContainer');
+            
+            container.innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(currentQuestionIndex / quizQuestions.length) * 100}%"></div>
+                </div>
+                <div class="quiz-question">
+                    <h3>Question ${currentQuestionIndex + 1} of ${quizQuestions.length}</h3>
+                    <p>${question.question}</p>
+                </div>
+                <div class="quiz-options">
+                    ${question.options.map((option, index) => `
+                        <div class="quiz-option" onclick="selectAnswer(${index})">
+                            ${option.definition || 'No definition available'}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function selectAnswer(optionIndex) {
+            const question = quizQuestions[currentQuestionIndex];
+            const selectedOption = question.options[optionIndex];
+            const isCorrect = selectedOption.id === question.correct.id;
+            
+            if (isCorrect) {
+                quizScore++;
+            }
+            
+            // Show correct/incorrect feedback
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((option, index) => {
+                option.onclick = null; // Disable further clicks
+                if (question.options[index].id === question.correct.id) {
+                    option.classList.add('correct');
+                } else if (index === optionIndex && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Move to next question after delay
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showCurrentQuestion();
+            }, 2000);
+        }
+
+        function showQuizResults() {
+            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="quiz-question">
+                    <h2>Quiz Complete!</h2>
+                    <div class="stat-card" style="margin: 20px 0;">
+                        <div class="stat-number">${quizScore}/${quizQuestions.length}</div>
+                        <div class="stat-label">Correct Answers</div>
+                    </div>
+                    <div class="stat-card" style="margin: 20px 0;">
+                        <div class="stat-number">${percentage}%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <button class="btn" onclick="loadQuiz()">Take Another Quiz</button>
+                </div>
+            `;
+        }
+
+        // Watching functions
+        function loadWatching() {
+            // Update watching stats
+            document.querySelector('#watching .stat-number').textContent = Math.floor(Math.random() * 10) + 3;
+            // The watching page content is already loaded in the HTML
+        }
+
+        // Profile functions
+        function loadProfile() {
+            if (currentUser) {
+                document.getElementById('profileName').value = currentUser.name;
+                document.getElementById('profileEmail').value = currentUser.email;
+                document.getElementById('memberSince').value = new Date(currentUser.createdAt).toLocaleDateString();
+            }
+        }
+
+        function updateProfile() {
+            alert('Profile update functionality would be implemented here');
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize app
+        // Watching page functionality
+        let currentVideo = null;
+        let isPlaying = false;
+        let lyricsVisible = false;
+        
+        const videoData = {
+            'perfect': {
+                title: 'Perfect (Ed Sheeran)',
+                type: 'Music Video',
+                duration: '4:23',
+                lyrics: `I found a love, for me
+Darling, just dive right in and follow my lead
+Well, I found a girl, beautiful and sweet
+Oh, I never knew you were the someone waiting for me
+
+'Cause we were just kids when we fell in love
+Not knowing what it was
+I will not give you up this time
+But darling, just kiss me slow
+Your heart is all I own
+And in your eyes, you're holding mine
+
+Baby, I'm dancing in the dark
+With you between my arms
+Barefoot on the grass
+Listening to our favourite song
+When you said you looked a mess
+I whispered underneath my breath
+But you heard it
+Darling, you look perfect tonight
+
+Well, I found a woman, stronger than anyone I know
+She shares my dreams, I hope that someday I'll share her home
+I found a lover, to carry more than just my secrets
+To carry love, to carry children of our own
+
+We are still kids, but we're so in love
+Fighting against all odds
+I know we'll be alright this time
+Darling, just hold my hand
+Be my girl, I'll be your man
+I see my future in your eyes
+
+Baby, I'm dancing in the dark
+With you between my arms
+Barefoot on the grass
+Listening to our favourite song
+When I saw you in that dress, looking so beautiful
+I don't deserve this, darling, you look perfect tonight
+
+Baby, I'm dancing in the dark
+With you between my arms
+Barefoot on the grass
+Listening to our favourite song
+I have faith in what I see
+Now I know I have met an angel in person
+And she looks perfect tonight`
+            },
+            'see-you-again': {
+                title: 'See You Again (Wiz Khalifa ft. Charlie Puth)',
+                type: 'Music Video',
+                duration: '3:50',
+                lyrics: `It's been a long day without you, my friend
+And I'll tell you all about it when I see you again
+We've come a long way from where we began
+Oh, I'll tell you all about it when I see you again
+When I see you again
+
+Damn, who knew?
+All the planes we flew
+Good things we've been through
+That I'd be standing right here talking to you
+'Bout another path
+I know we loved to hit the road and laugh
+But something told me that it wouldn't last
+Had to switch up, look at things different, see the bigger picture
+Those were the days
+Hard work forever pays
+Now I see you in a better place
+Now I see you in a better place
+
+How could we not talk about family when family's all that we got?
+Everything I went through you were standing there by my side
+And now you gon' be with me for the last ride
+
+It's been a long day without you, my friend
+And I'll tell you all about it when I see you again
+We've come a long way from where we began
+Oh, I'll tell you all about it when I see you again
+When I see you again
+
+First you both go out your way
+And the vibe is feeling strong
+And what's small turn to a friendship
+A friendship turn to a bond
+And that bond will never be broken
+The love will never get lost
+And when brotherhood come first
+Then the line will never be crossed
+Established it on our own
+When that line had to be drawn
+And that line is what we reach
+So remember me when I'm gone
+
+How could we not talk about family when family's all that we got?
+Everything I went through you were standing there by my side
+And now you gon' be with me for the last ride
+
+So let the light guide your way, yeah
+Hold every memory as you go
+And every road you take will always lead you home, home
+
+It's been a long day without you, my friend
+And I'll tell you all about it when I see you again
+We've come a long way from where we began
+Oh, I'll tell you all about it when I see you again
+When I see you again`
+            },
+            'sunspring': {
+                title: 'Sunspring (Short Sci-Fi Film)',
+                type: 'Short Film',
+                duration: '8:45',
+                lyrics: `[Opening Scene]
+H: I don't know what's happening to me.
+H: I keep having these dreams... visions... I can't tell what's real anymore.
+
+[Scene 2 - Coffee Shop]
+H: You're not real, are you?
+A: What do you mean?
+H: I mean... I've been here before. This exact moment. The way you're sitting, the coffee cup, everything.
+A: That's impossible.
+H: Is it? What if I told you I know what you're going to say next?
+
+[Scene 3 - Time Loop]
+H: I'm stuck in some kind of loop. Every day repeats itself, but I'm the only one who remembers.
+A: That sounds terrifying.
+H: It is. But maybe... maybe I can change things this time.
+A: How?
+H: By making different choices. By not being afraid.
+
+[Scene 4 - Breakthrough]
+H: I think I understand now. This isn't a curse. It's a gift.
+A: A gift?
+H: The chance to get it right. To be brave when it matters most.
+A: And what happens when you get it right?
+H: Then maybe... maybe I finally get to move forward.
+
+[Closing Scene]
+H: Thank you for believing in me.
+A: I always have.
+H: I know. And that's what makes all the difference.`
+            }
+        };
+
+        async function playContent(contentId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/media/content/${contentId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const content = await response.json();
+                
+                if (response.ok) {
+                    currentVideo = contentId;
+                    
+                    // Hide content grid and show video player view
+                    document.getElementById('watchingContent').style.display = 'none';
+                    document.getElementById('videoPlayerView').style.display = 'block';
+                    
+                    // Update video page title
+                    document.getElementById('videoPageTitle').textContent = `📺 ${content.title}`;
+                    
+                    // Reset video state
+                    document.getElementById('lyricsSection').style.display = 'none';
+                    lyricsVisible = false;
+                    
+                    // Store content for lyrics access
+                    window.currentMediaContent = content;
+                    
+                    isPlaying = false;
+                    document.getElementById('playPauseBtn').textContent = '▶️ Play';
+                    document.getElementById('subtitleBtn').textContent = '📝 Show Lyrics';
+                    
+                    // Create media element based on type
+                    let mediaElement = '';
+                    if (content.type === 'VIDEO' || content.type === 'MUSIC_VIDEO') {
+                        mediaElement = `
+                            <video controls style="width: 100%; height: 400px; border-radius: 10px;">
+                                <source src="http://localhost:5000${content.filePath}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        `;
+                    } else if (content.type === 'AUDIO') {
+                        mediaElement = `
+                            <audio controls style="width: 100%; height: 60px; border-radius: 10px;">
+                                <source src="http://localhost:5000${content.filePath}" type="audio/mpeg">
+                                Your browser does not support the audio tag.
+                            </audio>
+                        `;
+                    }
+                    
+                    // Update video placeholder with actual media
+                    document.getElementById('videoPlaceholder').innerHTML = mediaElement;
+                } else {
+                    alert('Error loading content: ' + content.error);
+                }
+            } catch (error) {
+                alert('Error loading content: ' + error.message);
+            }
+        }
+
+        function returnToContent() {
+            // Stop any playing media before navigating away
+            stopCurrentMedia();
+            
+            // Hide video player view and show content grid
+            document.getElementById('videoPlayerView').style.display = 'none';
+            document.getElementById('watchingContent').style.display = 'block';
+            
+            // Reset video state
+            currentVideo = null;
+            isPlaying = false;
+            lyricsVisible = false;
+        }
+
+        // Function to stop current media playback
+        function stopCurrentMedia() {
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+            if (videoPlaceholder) {
+                // Find video or audio elements within the placeholder
+                const videoElement = videoPlaceholder.querySelector('video');
+                const audioElement = videoPlaceholder.querySelector('audio');
+                
+                if (videoElement) {
+                    videoElement.pause();
+                    videoElement.currentTime = 0; // Reset to beginning
+                }
+                
+                if (audioElement) {
+                    audioElement.pause();
+                    audioElement.currentTime = 0; // Reset to beginning
+                }
+            }
+        }
+
+        function togglePlayPause() {
+            const btn = document.getElementById('playPauseBtn');
+            if (!isPlaying) {
+                isPlaying = true;
+                btn.textContent = '⏸️ Pause';
+                document.getElementById('videoPlaceholder').innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">▶️</div>
+                        <div>Playing: ${videoData[currentVideo].title}</div>
+                        <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Video simulation - Click pause to stop</div>
+                    </div>
+                `;
+            } else {
+                isPlaying = false;
+                btn.textContent = '▶️ Play';
+                document.getElementById('videoPlaceholder').innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">⏸️</div>
+                        <div>Paused: ${videoData[currentVideo].title}</div>
+                        <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Click play to continue</div>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleSubtitles() {
+            const btn = document.getElementById('subtitleBtn');
+            const lyricsSection = document.getElementById('lyricsSection');
+            
+            if (!lyricsVisible) {
+                lyricsVisible = true;
+                btn.textContent = '📝 Hide Lyrics';
+                lyricsSection.style.display = 'block';
+                
+                // Load lyrics from real content
+                const content = window.currentMediaContent;
+                if (content && content.lyrics) {
+                    document.getElementById('lyricsContent').innerHTML = `
+                        <div style="white-space: pre-line; font-family: 'Courier New', monospace;">${content.lyrics}</div>
+                    `;
+                } else {
+                    document.getElementById('lyricsContent').innerHTML = `
+                        <div style="text-align: center; color: #7f8c8d;">No lyrics available for this content.</div>
+                    `;
+                }
+            } else {
+                lyricsVisible = false;
+                btn.textContent = '📝 Show Lyrics';
+                lyricsSection.style.display = 'none';
+            }
+        }
+
+        function saveToVocab() {
+            if (!currentVideo) return;
+            
+            const content = videoData[currentVideo];
+            const word = prompt(`Enter a word from "${content.title}" to save to your vocabulary bank:`);
+            
+            if (word && word.trim()) {
+                // Add to vocabulary
+                const newWord = {
+                    word: word.trim(),
+                    definition: `From ${content.title} - ${content.type}`,
+                    example: `"${word}" appears in ${content.title}`,
+                    difficulty: 'BEGINNER'
+                };
+                
+                // Simulate adding to vocab bank
+                alert(`"${word}" has been saved to your vocabulary bank!`);
+                
+                // You could also call the actual API here:
+                // addWordToVocab(newWord);
+            }
+        }
+
+        function saveHighlightedWord() {
+            const selection = window.getSelection();
+            const highlightedText = selection.toString().trim();
+            
+            if (!highlightedText) {
+                document.getElementById('saveWordStatus').textContent = 'Please highlight a word first!';
+                document.getElementById('saveWordStatus').style.color = '#e74c3c';
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            // Clean the word (remove punctuation, extra spaces)
+            const cleanWord = highlightedText.replace(/[^\w\s]/g, '').trim();
+            
+            if (!cleanWord || cleanWord.length < 2) {
+                document.getElementById('saveWordStatus').textContent = 'Please highlight a valid word!';
+                document.getElementById('saveWordStatus').style.color = '#e74c3c';
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            if (!currentVideo) {
+                document.getElementById('saveWordStatus').textContent = 'No video context available!';
+                document.getElementById('saveWordStatus').style.color = '#e74c3c';
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            const content = window.currentMediaContent;
+            
+            if (!content) {
+                document.getElementById('saveWordStatus').textContent = 'No content context available!';
+                document.getElementById('saveWordStatus').style.color = '#e74c3c';
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+                return;
+            }
+            
+            // Create word object
+            const newWord = {
+                word: cleanWord.toLowerCase(),
+                definition: `From ${content.title} - ${content.type}`,
+                example: `"${cleanWord}" appears in ${content.title}`,
+                difficulty: 'BEGINNER'
+            };
+            
+            // Show loading state
+            document.getElementById('saveWordStatus').textContent = 'Saving...';
+            document.getElementById('saveWordStatus').style.color = '#3498db';
+            
+            // Call actual API to save word
+            fetch('/api/vocab', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(newWord)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save word');
+                }
+                return response.json();
+            })
+            .then(savedWord => {
+                // Add to local words array
+                if (!words) words = [];
+                words.push(savedWord);
+                
+                // Update quiz progress
+                updateQuizProgress();
+                
+                // Show success message
+                document.getElementById('saveWordStatus').textContent = `"${cleanWord}" saved to vocabulary bank!`;
+                document.getElementById('saveWordStatus').style.color = '#27ae60';
+                
+                // Clear selection
+                selection.removeAllRanges();
+                
+                // Clear status after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+                
+                // Highlight the saved word in lyrics
+                highlightSavedWord(cleanWord);
+            })
+            .catch(error => {
+                console.error('Error saving word:', error);
+                document.getElementById('saveWordStatus').textContent = 'Failed to save word. Please try again.';
+                document.getElementById('saveWordStatus').style.color = '#e74c3c';
+                
+                setTimeout(() => {
+                    document.getElementById('saveWordStatus').textContent = '';
+                }, 3000);
+            });
+        }
+
+        function highlightSavedWord(word) {
+            const lyricsContent = document.getElementById('lyricsContent');
+            const text = lyricsContent.innerHTML;
+            
+            // Create a regex to find the word (case insensitive)
+            const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+            const highlightedText = text.replace(regex, '<mark style="background: #f39c12; color: white; padding: 2px 4px; border-radius: 3px;">$1</mark>');
+            
+            lyricsContent.innerHTML = highlightedText;
+        }
+
+        // Load watching page with real data
+        async function loadWatching() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check admin status immediately since button is now always in DOM
+            await checkAdminStatus();
+
+            try {
+                const response = await fetch('/api/media/content', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayWatchingContent(data.mediaContent);
+                } else {
+                    document.getElementById('watchingContent').innerHTML = 
+                        '<div class="loading">Error loading content. Please try again.</div>';
+                }
+            } catch (error) {
+                document.getElementById('watchingContent').innerHTML = 
+                    '<div class="loading">Error loading content. Please try again.</div>';
+            }
+        }
+
+        // Check if current user is admin
+        async function checkAdminStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('No token found');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('User data:', data);
+                
+                const adminBtn = document.getElementById('adminDashboardBtn');
+                if (!adminBtn) {
+                    console.log('Admin button not found in DOM yet');
+                    return;
+                }
+                
+                if (response.ok && data.user && data.user.role === 'admin') {
+                    console.log('User is admin, showing admin button');
+                    adminBtn.style.display = 'inline-block';
+                } else {
+                    console.log('User is not admin, hiding admin button');
+                    adminBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                const adminBtn = document.getElementById('adminDashboardBtn');
+                if (adminBtn) {
+                    adminBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Open admin dashboard
+        function openAdminDashboard() {
+            window.open('admin.html', '_blank');
+        }
+
+        function displayWatchingContent(mediaContent) {
+            const container = document.getElementById('watchingContent');
+            
+            if (mediaContent.length === 0) {
+                container.innerHTML = '<div class="loading">No content available yet. Check back later!</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number">${mediaContent.length}</div>
+                        <div class="stat-label">Total Content</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${mediaContent.filter(m => m.type === 'MUSIC_VIDEO').length}</div>
+                        <div class="stat-label">Music Videos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${mediaContent.filter(m => m.type === 'VIDEO').length}</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${mediaContent.filter(m => m.type === 'AUDIO').length}</div>
+                        <div class="stat-label">Audio</div>
+                    </div>
+                </div>
+                
+                <div class="content-filters">
+                    <button class="btn active" onclick="filterContent('all')">All Content</button>
+                    <button class="btn" onclick="filterContent('MUSIC_VIDEO')">Music Videos</button>
+                    <button class="btn" onclick="filterContent('VIDEO')">Videos</button>
+                    <button class="btn" onclick="filterContent('AUDIO')">Audio</button>
+                </div>
+                
+                <div class="content-grid">
+            `;
+            
+            mediaContent.forEach(media => {
+                const thumbnailHtml = media.thumbnailPath 
+                    ? `<img src="http://localhost:5000${media.thumbnailPath}" alt="${media.title}">`
+                    : getDefaultThumbnail(media.type);
+                
+                html += `
+                    <div class="content-card" data-type="${media.type}" onclick="playContent(${media.id})">
+                        <div class="content-thumbnail">
+                            ${thumbnailHtml}
+                        </div>
+                        <div class="content-info">
+                            <h3>${media.title}</h3>
+                            <p>${media.description || 'No description available'}</p>
+                            <div class="content-meta">
+                                <span class="content-type">${media.type}</span>
+                                <span class="content-difficulty">${media.difficulty}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function getDefaultThumbnail(type) {
+            const icons = {
+                'VIDEO': '<div style="font-size: 48px;">🎥</div>',
+                'AUDIO': '<div style="font-size: 48px;">🎵</div>',
+                'MUSIC_VIDEO': '<div style="font-size: 48px;">🎤</div>'
+            };
+            return icons[type] || '<div style="font-size: 48px;">📁</div>';
+        }
+
+        function filterContent(type) {
+            const buttons = document.querySelectorAll('#watching .btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = '';
+            });
+            
+            event.target.classList.add('active');
+            event.target.style.background = '#16a085';
+            
+            // Filter content based on type
+            const cards = document.querySelectorAll('.content-card');
+            cards.forEach(card => {
+                if (type === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    const cardType = card.getAttribute('data-type');
+                    if (cardType === type) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Add hover effects for content cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.content-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading state
+            document.body.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                checkAuth();
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

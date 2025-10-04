@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/nodemailer": "^7.0.1",
+    "ajv": "^8.17.1",
+    "crypto": "^1.0.1",
+    "nodemailer": "^7.0.6"
+  }
+}

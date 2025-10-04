@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - English Learning App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+        }
+        .admin-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .header { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        }
+        .header h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+        }
+        .header p { 
+            color: #7f8c8d; 
+        }
+        .nav-tabs { 
+            display: flex; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 10px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        }
+        .nav-tab { 
+            flex: 1; 
+            padding: 15px; 
+            text-align: center; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            transition: all 0.3s; 
+            color: #7f8c8d; 
+            font-weight: 600; 
+        }
+        .nav-tab.active { 
+            background: #16a085; 
+            color: white; 
+        }
+        .nav-tab:hover { 
+            background: #f8f9fa; 
+        }
+        .nav-tab.active:hover { 
+            background: #138d75; 
+        }
+        .content-section { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            display: none; 
+        }
+        .content-section.active { 
+            display: block; 
+        }
+        .form-group { 
+            margin: 20px 0; 
+        }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #2c3e50; 
+        }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            transition: border-color 0.3s; 
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+            outline: none; 
+            border-color: #16a085; 
+        }
+        .form-group textarea { 
+            min-height: 120px; 
+            resize: vertical; 
+        }
+        .file-upload { 
+            border: 2px dashed #16a085; 
+            border-radius: 10px; 
+            padding: 30px; 
+            text-align: center; 
+            background: #f8f9fa; 
+            transition: all 0.3s; 
+        }
+        .file-upload:hover { 
+            background: #e8f5e8; 
+        }
+        .file-upload.dragover { 
+            background: #d4edda; 
+            border-color: #138d75; 
+        }
+        .file-input { 
+            display: none; 
+        }
+        .file-label { 
+            cursor: pointer; 
+            color: #16a085; 
+            font-weight: 600; 
+        }
+        .file-info { 
+            margin-top: 10px; 
+            color: #7f8c8d; 
+            font-size: 14px; 
+        }
+        .btn { 
+            background: #16a085; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin: 10px 5px; 
+        }
+        .btn:hover { 
+            background: #138d75; 
+            transform: translateY(-2px); 
+        }
+        .btn-secondary { 
+            background: #95a5a6; 
+        }
+        .btn-secondary:hover { 
+            background: #7f8c8d; 
+        }
+        .btn-danger { 
+            background: #e74c3c; 
+        }
+        .btn-danger:hover { 
+            background: #c0392b; 
+        }
+        .btn:disabled { 
+            background: #bdc3c7; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            padding: 10px; 
+            border-radius: 6px; 
+            margin: 10px 0; 
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 10px 0; 
+            border: 2px solid #c3e6cb;
+        }
+        .success h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 18px;
+        }
+        .success p {
+            margin: 8px 0;
+            color: #155724;
+        }
+        .success button {
+            margin: 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .success button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .loading { 
+            text-align: center; 
+            color: #7f8c8d; 
+            font-style: italic; 
+        }
+        .media-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin-top: 20px; 
+        }
+        .media-card { 
+            border: 1px solid #e9ecef; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            background: white; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            transition: transform 0.3s; 
+        }
+        .media-card:hover { 
+            transform: translateY(-5px); 
+        }
+        .media-thumbnail { 
+            width: 100%; 
+            height: 200px; 
+            background: #f8f9fa; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 48px; 
+            color: #7f8c8d; 
+        }
+        .media-thumbnail img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        .media-info { 
+            padding: 15px; 
+        }
+        .media-title { 
+            font-weight: 600; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .media-type { 
+            color: #16a085; 
+            font-size: 14px; 
+            margin-bottom: 10px; 
+        }
+        .media-description { 
+            color: #7f8c8d; 
+            font-size: 14px; 
+            margin-bottom: 15px; 
+        }
+        .media-actions { 
+            display: flex; 
+            gap: 10px; 
+        }
+        .media-actions .btn { 
+            padding: 8px 15px; 
+            font-size: 14px; 
+            margin: 0; 
+        }
+        .status-badge { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            margin-left: 10px; 
+        }
+        .status-active { 
+            background: #d4edda; 
+            color: #155724; 
+        }
+        .status-inactive { 
+            background: #f8d7da; 
+            color: #721c24; 
+        }
+        .pagination { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            margin-top: 20px; 
+            gap: 10px; 
+        }
+        .pagination button { 
+            padding: 10px 15px; 
+            border: 1px solid #e9ecef; 
+            background: white; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .pagination button:hover { 
+            background: #f8f9fa; 
+        }
+        .pagination button.active { 
+            background: #16a085; 
+            color: white; 
+            border-color: #16a085; 
+        }
+        .pagination button:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h1 style="margin: 0;">🎬 Admin Dashboard</h1>
+                <button class="btn" onclick="goBackToUserPage()" style="background: #3498db;">← Back to User Page</button>
+            </div>
+            <p>Manage videos, music, and content for the English Learning App</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('upload')">📤 Upload Content</div>
+            <div class="nav-tab" onclick="showTab('manage')">📋 Manage Content</div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div id="upload-section" class="content-section active">
+            <h2>Upload New Content</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" placeholder="Brief description of the content..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="type">Content Type:</label>
+                    <select id="type" required>
+                        <option value="">Select type...</option>
+                        <option value="VIDEO">Video</option>
+                        <option value="AUDIO">Audio</option>
+                        <option value="MUSIC_VIDEO">Music Video</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty">
+                        <option value="BEGINNER">Beginner</option>
+                        <option value="INTERMEDIATE">Intermediate</option>
+                        <option value="ADVANCED">Advanced</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <input type="text" id="category" placeholder="e.g., Pop Music, Educational, Comedy...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tags">Tags (comma-separated):</label>
+                    <input type="text" id="tags" placeholder="e.g., music, pop, lyrics, english...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Media File (Required):</label>
+                    <div class="file-upload" id="mediaUpload">
+                        <input type="file" id="mediaFile" class="file-input" accept="video/*,audio/*">
+                        <label for="mediaFile" class="file-label">📁 Choose Media File</label>
+                        <div class="file-info">Supports: MP4, WebM, OGG, MP3, WAV</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Thumbnail Image (Optional):</label>
+                    <div class="file-upload" id="thumbnailUpload">
+                        <input type="file" id="thumbnail" class="file-input" accept="image/*">
+                        <label for="thumbnail" class="file-label">🖼️ Choose Thumbnail</label>
+                        <div class="file-info">Supports: JPEG, PNG, GIF</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lyrics">Lyrics/Script:</label>
+                    <textarea id="lyrics" placeholder="Enter the lyrics or script content here..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn">🚀 Upload Content</button>
+            </form>
+            
+            
+            <div id="uploadMessage"></div>
+        </div>
+        
+        <!-- Manage Section -->
+        <div id="manage-section" class="content-section">
+            <h2>Manage Content</h2>
+            <div id="mediaList">
+                <div class="loading">Loading content...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'upload';
+        let currentPage = 1;
+        let mediaContent = [];
+
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Show tab
+        function showTab(tabName) {
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            const activeTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(tabName + '-section').classList.add('active');
+            
+            currentTab = tabName;
+            
+            if (tabName === 'manage') {
+                loadMediaContent();
+            }
+        }
+
+        // Function to attach file upload listeners with retry mechanism
+        function attachFileUploadListenersWithRetry(retries = 3) {
+            const mediaFileInput = document.getElementById('mediaFile');
+            const thumbnailInput = document.getElementById('thumbnail');
+            
+            if (!mediaFileInput && retries > 0) {
+                setTimeout(() => {
+                    attachFileUploadListenersWithRetry(retries - 1);
+                }, 100);
+                return;
+            }
+            
+            if (!thumbnailInput && retries > 0) {
+                setTimeout(() => {
+                    attachFileUploadListenersWithRetry(retries - 1);
+                }, 100);
+                return;
+            }
+            
+            // If we get here, either elements are found or we're out of retries
+            attachFileUploadListeners();
+        }
+
+        // Function to attach file upload listeners
+        function attachFileUploadListeners() {
+            const mediaFileInput = document.getElementById('mediaFile');
+            const thumbnailInput = document.getElementById('thumbnail');
+            
+            if (mediaFileInput) {
+                // Remove any existing listeners first
+                mediaFileInput.removeEventListener('change', mediaFileInput._changeHandler);
+                
+                // Create new handler
+                mediaFileInput._changeHandler = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        document.getElementById('mediaUpload').innerHTML = `
+                            <div class="file-label">✅ ${file.name}</div>
+                            <div class="file-info">Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        `;
+                    }
+                };
+                
+                mediaFileInput.addEventListener('change', mediaFileInput._changeHandler);
+            }
+            
+            if (thumbnailInput) {
+                // Remove any existing listeners first
+                thumbnailInput.removeEventListener('change', thumbnailInput._changeHandler);
+                
+                // Create new handler
+                thumbnailInput._changeHandler = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        document.getElementById('thumbnailUpload').innerHTML = `
+                            <div class="file-label">✅ ${file.name}</div>
+                            <div class="file-info">Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        `;
+                    }
+                };
+                
+                thumbnailInput.addEventListener('change', thumbnailInput._changeHandler);
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            
+            
+            // Ensure upload tab is active
+            showTab('upload');
+            
+            
+            // Attach file upload listeners immediately
+            attachFileUploadListeners();
+            
+            // Get upload form
+            const uploadForm = document.getElementById('uploadForm');
+            
+            // Upload form handler
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!checkAuth()) return;
+            
+            const formData = new FormData();
+            const token = localStorage.getItem('token');
+            
+            // Add form fields
+            const titleInput = document.getElementById('title');
+            const descriptionInput = document.getElementById('description');
+            const typeInput = document.getElementById('type');
+            const difficultyInput = document.getElementById('difficulty');
+            const categoryInput = document.getElementById('category');
+            const tagsInput = document.getElementById('tags');
+            const lyricsInput = document.getElementById('lyrics');
+            
+            if (!titleInput || !typeInput) {
+                showMessage('uploadMessage', 'Required form fields not found', 'error');
+                return;
+            }
+            
+            formData.append('title', titleInput.value);
+            formData.append('description', descriptionInput ? descriptionInput.value : '');
+            formData.append('type', typeInput.value);
+            formData.append('difficulty', difficultyInput ? difficultyInput.value : 'BEGINNER');
+            formData.append('category', categoryInput ? categoryInput.value : '');
+            formData.append('tags', tagsInput ? tagsInput.value : '');
+            formData.append('lyrics', lyricsInput ? lyricsInput.value : '');
+            
+            // Add files - simplified approach
+            const mediaFileInput = document.getElementById('mediaFile');
+            const thumbnailInput = document.getElementById('thumbnail');
+            
+            if (!mediaFileInput) {
+                console.error('❌ Media file input element not found in DOM');
+                showMessage('uploadMessage', 'Error: File input not found. Please refresh the page and try again.', 'error');
+                return;
+            }
+            
+            const mediaFile = mediaFileInput.files[0];
+            const thumbnailFile = thumbnailInput ? thumbnailInput.files[0] : null;
+            
+            if (!mediaFile) {
+                showMessage('uploadMessage', 'Please select a media file', 'error');
+                return;
+            }
+            
+            formData.append('mediaFile', mediaFile);
+            if (thumbnailFile) {
+                formData.append('thumbnail', thumbnailFile);
+            }
+            
+            const messageDiv = document.getElementById('uploadMessage');
+            messageDiv.innerHTML = '<div class="loading">Uploading content...</div>';
+            
+            try {
+                const response = await fetch('/api/admin/upload-media', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show detailed success message
+                    const successMessage = `
+                        <div class="success">
+                            <h3>🎉 Upload Successful!</h3>
+                            <p><strong>Title:</strong> ${data.mediaContent?.title || titleInput.value}</p>
+                            <p><strong>Type:</strong> ${data.mediaContent?.type || typeInput.value}</p>
+                            <p><strong>Media File:</strong> ${mediaFile.name}</p>
+                            <p><strong>Saved to:</strong> BE/uploads/mediaFiles/</p>
+                            ${thumbnailFile ? `<p><strong>Thumbnail:</strong> ${thumbnailFile.name}</p>` : ''}
+                            ${thumbnailFile ? `<p><strong>Thumbnail saved to:</strong> BE/uploads/thumbnails/</p>` : ''}
+                            <p style="margin-top: 10px; font-weight: bold;">✅ Content is now available on the Watching page!</p>
+                            <div style="margin-top: 15px;">
+                                <button onclick="showTab('manage'); loadMediaContent();" class="btn" style="background: #3498db; margin-right: 10px;">📋 View All Content</button>
+                                <button onclick="window.open('index.html', '_blank')" class="btn" style="background: #16a085;">👀 Go to Watching Page</button>
+                            </div>
+                        </div>
+                    `;
+                    showMessage('uploadMessage', successMessage, 'success');
+                    
+                    // Reset form
+                    document.getElementById('uploadForm').reset();
+                    
+                    // Reset file upload displays (keep input elements intact)
+                    const mediaLabel = document.querySelector('#mediaUpload .file-label');
+                    const mediaInfo = document.querySelector('#mediaUpload .file-info');
+                    if (mediaLabel) {
+                        mediaLabel.textContent = '📁 Choose Media File';
+                        mediaLabel.style.color = '#16a085';
+                    }
+                    if (mediaInfo) {
+                        mediaInfo.textContent = 'Supports: MP4, WebM, OGG, MP3, WAV';
+                    }
+                    
+                    const thumbnailLabel = document.querySelector('#thumbnailUpload .file-label');
+                    const thumbnailInfo = document.querySelector('#thumbnailUpload .file-info');
+                    if (thumbnailLabel) {
+                        thumbnailLabel.textContent = '🖼️ Choose Thumbnail';
+                        thumbnailLabel.style.color = '#16a085';
+                    }
+                    if (thumbnailInfo) {
+                        thumbnailInfo.textContent = 'Supports: JPEG, PNG, GIF';
+                    }
+                    
+                    // Clear the file inputs
+                    const mediaFileInput = document.getElementById('mediaFile');
+                    const thumbnailInput = document.getElementById('thumbnail');
+                    if (mediaFileInput) mediaFileInput.value = '';
+                    if (thumbnailInput) thumbnailInput.value = '';
+                    
+                } else {
+                    showMessage('uploadMessage', `Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage('uploadMessage', `Error: ${error.message}`, 'error');
+            }
+        });
+            }
+            
+            // Load initial content if on manage tab
+            if (currentTab === 'manage') {
+                loadMediaContent();
+            }
+        });
+
+        // Load media content
+        async function loadMediaContent(page = 1) {
+            if (!checkAuth()) return;
+            
+            const token = localStorage.getItem('token');
+            const messageDiv = document.getElementById('mediaList');
+            
+            try {
+                const response = await fetch(`/api/admin/media?page=${page}&limit=12`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    mediaContent = data.mediaContent;
+                    displayMediaContent(data);
+                } else {
+                    messageDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Display media content
+        function displayMediaContent(data) {
+            const messageDiv = document.getElementById('mediaList');
+            
+            if (data.mediaContent.length === 0) {
+                messageDiv.innerHTML = '<div class="loading">No content found</div>';
+                return;
+            }
+            
+            let html = '<div class="media-grid">';
+            
+            data.mediaContent.forEach(media => {
+                const thumbnailHtml = media.thumbnailPath 
+                    ? `<img src="http://localhost:5000${media.thumbnailPath}" alt="${media.title}">`
+                    : getDefaultThumbnail(media.type);
+                
+                html += `
+                    <div class="media-card">
+                        <div class="media-thumbnail">
+                            ${thumbnailHtml}
+                        </div>
+                        <div class="media-info">
+                            <div class="media-title">
+                                ${media.title}
+                                <span class="status-badge ${media.isActive ? 'status-active' : 'status-inactive'}">
+                                    ${media.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div class="media-type">${media.type}</div>
+                            <div class="media-description">${media.description || 'No description'}</div>
+                            <div class="media-actions">
+                                <button class="btn btn-secondary" onclick="editMedia(${media.id})">✏️ Edit</button>
+                                <button class="btn ${media.isActive ? 'btn-secondary' : 'btn'}" onclick="toggleMedia(${media.id})">
+                                    ${media.isActive ? '⏸️ Deactivate' : '▶️ Activate'}
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteMedia(${media.id})">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // Add pagination
+            if (data.pagination.pages > 1) {
+                html += createPagination(data.pagination);
+            }
+            
+            messageDiv.innerHTML = html;
+        }
+
+        // Get default thumbnail based on type
+        function getDefaultThumbnail(type) {
+            const icons = {
+                'VIDEO': '🎥',
+                'AUDIO': '🎵',
+                'MUSIC_VIDEO': '🎤'
+            };
+            return icons[type] || '📁';
+        }
+
+        // Create pagination
+        function createPagination(pagination) {
+            let html = '<div class="pagination">';
+            
+            // Previous button
+            html += `<button ${pagination.page === 1 ? 'disabled' : ''} onclick="loadMediaContent(${pagination.page - 1})">← Previous</button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    html += `<button class="active">${i}</button>`;
+                } else {
+                    html += `<button onclick="loadMediaContent(${i})">${i}</button>`;
+                }
+            }
+            
+            // Next button
+            html += `<button ${pagination.page === pagination.pages ? 'disabled' : ''} onclick="loadMediaContent(${pagination.page + 1})">Next →</button>`;
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Toggle media status
+        async function toggleMedia(id) {
+            if (!checkAuth()) return;
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`/api/admin/media/${id}/toggle`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    loadMediaContent(currentPage);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Delete media
+        async function deleteMedia(id) {
+            if (!checkAuth()) return;
+            
+            if (!confirm('Are you sure you want to delete this content? This action cannot be undone.')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`/api/admin/media/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    loadMediaContent(currentPage);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Edit media
+        function editMedia(id) {
+            if (!checkAuth()) return;
+            
+            // Find the media item
+            const media = mediaContent.find(m => m.id === id);
+            if (!media) {
+                alert('Media not found');
+                return;
+            }
+            
+            // Create edit modal
+            const editModal = document.createElement('div');
+            editModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            `;
+            
+            editModal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 15px;
+                    padding: 30px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #2c3e50;">✏️ Edit Content</h2>
+                        <button onclick="closeEditModal()" style="
+                            background: #e74c3c;
+                            color: white;
+                            border: none;
+                            border-radius: 50%;
+                            width: 30px;
+                            height: 30px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">×</button>
+                    </div>
+                    
+                    <form id="editForm">
+                        <div class="form-group">
+                            <label for="editTitle">Title:</label>
+                            <input type="text" id="editTitle" value="${media.title}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editDescription">Description:</label>
+                            <textarea id="editDescription" placeholder="Brief description of the content...">${media.description || ''}</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editType">Content Type:</label>
+                            <select id="editType" required>
+                                <option value="VIDEO" ${media.type === 'VIDEO' ? 'selected' : ''}>Video</option>
+                                <option value="AUDIO" ${media.type === 'AUDIO' ? 'selected' : ''}>Audio</option>
+                                <option value="MUSIC_VIDEO" ${media.type === 'MUSIC_VIDEO' ? 'selected' : ''}>Music Video</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editDifficulty">Difficulty Level:</label>
+                            <select id="editDifficulty">
+                                <option value="BEGINNER" ${media.difficulty === 'BEGINNER' ? 'selected' : ''}>Beginner</option>
+                                <option value="INTERMEDIATE" ${media.difficulty === 'INTERMEDIATE' ? 'selected' : ''}>Intermediate</option>
+                                <option value="ADVANCED" ${media.difficulty === 'ADVANCED' ? 'selected' : ''}>Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCategory">Category:</label>
+                            <input type="text" id="editCategory" value="${media.category || ''}" placeholder="e.g., Pop Music, Educational, Comedy...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editTags">Tags (comma-separated):</label>
+                            <input type="text" id="editTags" value="${media.tags ? media.tags.join(', ') : ''}" placeholder="e.g., music, pop, lyrics, english...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editLyrics">Lyrics/Script:</label>
+                            <textarea id="editLyrics" placeholder="Enter the lyrics or script content here...">${media.lyrics || ''}</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Status:</label>
+                            <select id="editStatus">
+                                <option value="true" ${media.isActive ? 'selected' : ''}>Active</option>
+                                <option value="false" ${!media.isActive ? 'selected' : ''}>Inactive</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Replace Media File (Optional):</label>
+                            <div class="file-upload" id="editMediaUpload">
+                                <input type="file" id="editMediaFile" class="file-input" accept="video/*,audio/*">
+                                <label for="editMediaFile" class="file-label">📁 Choose New Media File</label>
+                                <div class="file-info">Current: ${media.filePath ? media.filePath.split('/').pop() : 'No file'}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Replace Thumbnail (Optional):</label>
+                            <div class="file-upload" id="editThumbnailUpload">
+                                <input type="file" id="editThumbnail" class="file-input" accept="image/*">
+                                <label for="editThumbnail" class="file-label">🖼️ Choose New Thumbnail</label>
+                                <div class="file-info">Current: ${media.thumbnailPath ? media.thumbnailPath.split('/').pop() : 'No thumbnail'}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" class="btn">💾 Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">❌ Cancel</button>
+                        </div>
+                    </form>
+                    
+                    <div id="editMessage" style="margin-top: 15px;"></div>
+                </div>
+            `;
+            
+            document.body.appendChild(editModal);
+            
+            // Attach file upload listeners for edit modal
+            attachEditFileUploadListeners();
+            
+            // Handle form submission
+            document.getElementById('editForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const token = localStorage.getItem('token');
+                const messageDiv = document.getElementById('editMessage');
+                
+                // Check if files are being uploaded
+                const mediaFile = document.getElementById('editMediaFile').files[0];
+                const thumbnailFile = document.getElementById('editThumbnail').files[0];
+                
+                if (mediaFile || thumbnailFile) {
+                    // Handle file uploads
+                    const formData = new FormData();
+                    
+                    // Add files
+                    if (mediaFile) formData.append('mediaFile', mediaFile);
+                    if (thumbnailFile) formData.append('thumbnail', thumbnailFile);
+                    
+                    messageDiv.innerHTML = '<div class="loading">Updating files...</div>';
+                    
+                    try {
+                        const response = await fetch(`/api/admin/media/${id}/files`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            messageDiv.innerHTML = `
+                                <div class="success">
+                                    <h3>✅ Files Updated Successfully!</h3>
+                                    <p><strong>Media File:</strong> ${mediaFile ? mediaFile.name : 'Not changed'}</p>
+                                    <p><strong>Thumbnail:</strong> ${thumbnailFile ? thumbnailFile.name : 'Not changed'}</p>
+                                    <button onclick="closeEditModal(); loadMediaContent(currentPage);" class="btn" style="margin-top: 10px;">🔄 Refresh List</button>
+                                </div>
+                            `;
+                            
+                            // Update the media content in our local array
+                            const index = mediaContent.findIndex(m => m.id === id);
+                            if (index !== -1) {
+                                mediaContent[index] = { ...mediaContent[index], ...data.mediaContent };
+                            }
+                        } else {
+                            messageDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                        }
+                    } catch (error) {
+                        messageDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                    }
+                } else {
+                    // Handle metadata update only
+                    const updateData = {
+                        title: document.getElementById('editTitle').value,
+                        description: document.getElementById('editDescription').value,
+                        type: document.getElementById('editType').value,
+                        difficulty: document.getElementById('editDifficulty').value,
+                        category: document.getElementById('editCategory').value,
+                        tags: document.getElementById('editTags').value,
+                        lyrics: document.getElementById('editLyrics').value,
+                        isActive: document.getElementById('editStatus').value === 'true'
+                    };
+                    
+                    messageDiv.innerHTML = '<div class="loading">Updating content...</div>';
+                    
+                    try {
+                        const response = await fetch(`/api/admin/media/${id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(updateData)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            messageDiv.innerHTML = `
+                                <div class="success">
+                                    <h3>✅ Content Updated Successfully!</h3>
+                                    <p><strong>Title:</strong> ${data.mediaContent.title}</p>
+                                    <p><strong>Type:</strong> ${data.mediaContent.type}</p>
+                                    <p><strong>Status:</strong> ${data.mediaContent.isActive ? 'Active' : 'Inactive'}</p>
+                                    <button onclick="closeEditModal(); loadMediaContent(currentPage);" class="btn" style="margin-top: 10px;">🔄 Refresh List</button>
+                                </div>
+                            `;
+                            
+                            // Update the media content in our local array
+                            const index = mediaContent.findIndex(m => m.id === id);
+                            if (index !== -1) {
+                                mediaContent[index] = { ...mediaContent[index], ...data.mediaContent };
+                            }
+                        } else {
+                            messageDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                        }
+                    } catch (error) {
+                        messageDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                    }
+                }
+            });
+        }
+        
+        // Attach file upload listeners for edit modal
+        function attachEditFileUploadListeners() {
+            const editMediaFileInput = document.getElementById('editMediaFile');
+            const editThumbnailInput = document.getElementById('editThumbnail');
+            
+            if (editMediaFileInput) {
+                editMediaFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const uploadDiv = document.getElementById('editMediaUpload');
+                        const existingLabel = uploadDiv.querySelector('.file-label');
+                        const existingInfo = uploadDiv.querySelector('.file-info');
+                        
+                        if (existingLabel) {
+                            existingLabel.textContent = `✅ ${file.name}`;
+                            existingLabel.style.color = '#16a085';
+                        }
+                        if (existingInfo) {
+                            existingInfo.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                        }
+                    }
+                });
+            }
+            
+            if (editThumbnailInput) {
+                editThumbnailInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const uploadDiv = document.getElementById('editThumbnailUpload');
+                        const existingLabel = uploadDiv.querySelector('.file-label');
+                        const existingInfo = uploadDiv.querySelector('.file-info');
+                        
+                        if (existingLabel) {
+                            existingLabel.textContent = `✅ ${file.name}`;
+                            existingLabel.style.color = '#16a085';
+                        }
+                        if (existingInfo) {
+                            existingInfo.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Close edit modal
+        function closeEditModal() {
+            const modal = document.querySelector('div[style*="position: fixed"]');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Show message
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (type === 'success' && message.includes('<div class="success">')) {
+                // For HTML success messages, use innerHTML directly
+                element.innerHTML = message;
+            } else {
+                // For simple text messages, wrap in div
+                element.innerHTML = `<div class="${type}">${message}</div>`;
+            }
+        }
+
+        // Go back to user page
+        function goBackToUserPage() {
+            window.location.href = 'index.html';
+        }
+
+        // Attach file upload listeners
+        function attachFileUploadListeners() {
+            
+            // Function to safely get element by ID
+            function safeGetElement(id) {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.warn(`⚠️ Element ${id} not found`);
+                }
+                return element;
+            }
+            
+            // Media file input
+            const mediaFileInput = safeGetElement('mediaFile');
+            if (mediaFileInput) {
+                // Remove existing listeners to prevent duplicates
+                mediaFileInput.removeEventListener('change', mediaFileInput._changeHandler);
+                
+                // Create new handler
+                mediaFileInput._changeHandler = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Update display without removing the input element
+                        const uploadDiv = document.getElementById('mediaUpload');
+                        const existingLabel = uploadDiv.querySelector('.file-label');
+                        const existingInfo = uploadDiv.querySelector('.file-info');
+                        
+                        if (existingLabel) {
+                            existingLabel.textContent = `✅ ${file.name}`;
+                            existingLabel.style.color = '#16a085';
+                        }
+                        if (existingInfo) {
+                            existingInfo.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                        }
+                    }
+                };
+                
+                // Attach the handler
+                mediaFileInput.addEventListener('change', mediaFileInput._changeHandler);
+            }
+            
+            // Thumbnail input
+            const thumbnailInput = safeGetElement('thumbnail');
+            if (thumbnailInput) {
+                // Remove existing listeners to prevent duplicates
+                thumbnailInput.removeEventListener('change', thumbnailInput._changeHandler);
+                
+                // Create new handler
+                thumbnailInput._changeHandler = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Update display without removing the input element
+                        const uploadDiv = document.getElementById('thumbnailUpload');
+                        const existingLabel = uploadDiv.querySelector('.file-label');
+                        const existingInfo = uploadDiv.querySelector('.file-info');
+                        
+                        if (existingLabel) {
+                            existingLabel.textContent = `✅ ${file.name}`;
+                            existingLabel.style.color = '#16a085';
+                        }
+                        if (existingInfo) {
+                            existingInfo.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                        }
+                    }
+                };
+                
+                // Attach the handler
+                thumbnailInput.addEventListener('change', thumbnailInput._changeHandler);
+            }
+        }
+
+
+    </script>
+</body>
+</html>
