@@ -188,7 +188,11 @@ const Quiz = () => {
       navigate('/login');
       return;
     }
-    fetch(`/api/auth/vocabulary?userId=${user.id}`)
+    fetch('/api/vocab', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(vocabWords => {
         if (!Array.isArray(vocabWords) || vocabWords.length < 10) {
