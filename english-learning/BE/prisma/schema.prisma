@@ -8,21 +8,20 @@ datasource db {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  email             String   @unique
-  password          String
-  name              String?
-  role              String   @default("user")
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  vocabulary  Vocabulary[]
-  flashcards  Flashcard[]
-  quizResults QuizResult[]
-  progress    Progress[]
-  uploadedMedia MediaContent[]
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  password         String
+  name             String?
+  role             String         @default("user")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  flashcards       Flashcard[]
+  uploadedMedia    MediaContent[]
+  progress         Progress[]
+  quizResults      QuizResult[]
+  vocabulary       Vocabulary[]
 }
 
 model Course {
@@ -31,6 +30,121 @@ model Course {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime
+}
+
+model Vocabulary {
+  id            Int        @id @default(autoincrement())
+  word          String
+  definition    String
+  example       String?
+  pronunciation String?
+  partOfSpeech  String?
+  synonyms      String[]   @default([])
+  difficulty    Difficulty @default(BEGINNER)
+  userId        Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  repetitions   Int        @default(0)
+  nextReview    DateTime   @default(now())
+  easeFactor    Float      @default(2.5)
+  interval      Int        @default(1)
+  user          User       @relation(fields: [userId], references: [id])
+}
+
+model Flashcard {
+  id          Int        @id @default(autoincrement())
+  front       String
+  back        String
+  category    String
+  difficulty  Difficulty
+  userId      Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  repetitions Int        @default(0)
+  nextReview  DateTime   @default(now())
+  easeFactor  Float      @default(2.5)
+  interval    Int        @default(1)
+  user        User       @relation(fields: [userId], references: [id])
+}
+
+model Quiz {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  category    String
+  difficulty  Difficulty
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  questions   Question[]
+  quizResults QuizResult[]
+}
+
+model Question {
+  id            Int          @id @default(autoincrement())
+  question      String
+  type          QuestionType
+  options       String[]     @default([])
+  correctAnswer String
+  explanation   String?
+  quizId        Int
+  createdAt     DateTime     @default(now())
+  quiz          Quiz         @relation(fields: [quizId], references: [id])
+}
+
+model QuizResult {
+  id              Int              @id @default(autoincrement())
+  userId          Int
+  quizId          Int
+  score           Int
+  totalQuestions  Int
+  timeSpent       Int
+  completedAt     DateTime         @default(now())
+  questionResults QuestionResult[]
+  quiz            Quiz             @relation(fields: [quizId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+}
+
+model QuestionResult {
+  id             Int        @id @default(autoincrement())
+  quizResultId   Int
+  questionId     String
+  question       String
+  selectedOption String
+  correctAnswer  String
+  isCorrect      Boolean
+  timeSpent      Int        @default(0)
+  createdAt      DateTime   @default(now())
+  quizResult     QuizResult @relation(fields: [quizResultId], references: [id], onDelete: Cascade)
+}
+
+model Progress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  category    String
+  level       Int      @default(1)
+  experience  Int      @default(0)
+  streak      Int      @default(0)
+  lastStudied DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model MediaContent {
+  id            Int        @id @default(autoincrement())
+  title         String
+  description   String?
+  type          MediaType
+  filePath      String
+  thumbnailPath String?
+  duration      Int?
+  lyrics        String?
+  difficulty    Difficulty @default(BEGINNER)
+  category      String?
+  tags          String[]   @default([])
+  isActive      Boolean    @default(true)
+  uploaderId    Int?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  uploader      User?      @relation(fields: [uploaderId], references: [id])
 }
 
 enum Difficulty {
@@ -45,123 +159,8 @@ enum QuestionType {
   FILL_IN_BLANK
 }
 
-model Vocabulary {
-  id            Int        @id @default(autoincrement())
-  word          String
-  definition    String
-  example       String?
-  pronunciation String?
-  partOfSpeech  String?
-  synonyms      String[]   @default([])
-  difficulty    Difficulty @default(BEGINNER)
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  repetitions   Int       @default(0)
-  nextReview    DateTime  @default(now())
-  easeFactor    Float     @default(2.5)
-  interval      Int       @default(1)
-}
-
-model Flashcard {
-  id            Int        @id @default(autoincrement())
-  front         String     // The word
-  back          String     // The word's definition
-  category      String
-  difficulty    Difficulty
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  repetitions   Int       @default(0)
-  nextReview    DateTime  @default(now())
-  easeFactor    Float     @default(2.5)
-  interval      Int       @default(1)
-}
-
-model Quiz {
-  id          Int        @id @default(autoincrement())
-  title       String
-  description String?
-  category    String
-  difficulty  Difficulty
-  questions   Question[]
-  quizResults QuizResult[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
-
-model Question {
-  id            Int          @id @default(autoincrement())
-  question      String
-  type          QuestionType
-  options       String[]     @default([])
-  correctAnswer String
-  explanation   String?
-  quizId        Int
-  quiz          Quiz         @relation(fields: [quizId], references: [id])
-  createdAt     DateTime     @default(now())
-}
-
-model QuizResult {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  user           User     @relation(fields: [userId], references: [id])
-  quizId         Int
-  quiz           Quiz     @relation(fields: [quizId], references: [id])
-  score          Int
-  totalQuestions Int
-  timeSpent      Int      // in seconds
-  completedAt    DateTime @default(now())
-  questionResults QuestionResult[]
-}
-
-model QuestionResult {
-  id             Int      @id @default(autoincrement())
-  quizResultId   Int
-  quizResult     QuizResult @relation(fields: [quizResultId], references: [id], onDelete: Cascade)
-  questionId     String   // Unique identifier for the question
-  question       String   // The actual question text
-  selectedOption String   // User's selected answer
-  correctAnswer  String   // The correct answer
-  isCorrect      Boolean  // Whether the answer was correct
-  timeSpent      Int      @default(0) // Time spent on this question in seconds
-  createdAt      DateTime @default(now())
-}
-
-model Progress {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  category    String
-  level       Int      @default(1)
-  experience  Int      @default(0)
-  streak      Int      @default(0)
-  lastStudied DateTime @default(now())
-}
-
 enum MediaType {
   VIDEO
   AUDIO
   MUSIC_VIDEO
-}
-
-model MediaContent {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  type        MediaType
-  filePath    String    // Path to uploaded file
-  thumbnailPath String?  // Path to thumbnail image
-  duration    Int?      // Duration in seconds
-  lyrics      String?   // Lyrics/script content
-  difficulty  Difficulty @default(BEGINNER)
-  category    String?   // Genre, topic, etc.
-  tags        String[]  @default([])
-  isActive    Boolean   @default(true)
-  uploaderId  Int?      // Admin who uploaded
-  uploader    User?     @relation(fields: [uploaderId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
 }
