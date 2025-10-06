@@ -7,10 +7,16 @@ services:
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
-        value: postgresql://postgres:270604@localhost:5432/auth_db
+        fromDatabase:
+          name: english-learning-db
+          property: connectionString
       - key: JWT_SECRET
         value: your-super-secret-jwt-key-change-this-in-production
       - key: CORS_ORIGIN
-        value: https://silly-smakager-945b58.netlify.app
+        value: https://your-frontend-url.netlify.app
       - key: NODE_ENV
         value: production
+
+databases:
+  - name: english-learning-db
+    plan: free
