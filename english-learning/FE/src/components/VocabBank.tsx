@@ -268,46 +268,6 @@ const ReturnBtn = styled.button`
   &:hover { background: #16a085; color: #fff; }
 `;
 
-const BulkFetchButton = styled.button`
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 1rem 0;
-  &:hover {
-    background: #2980b9;
-  }
-`;
-
-const BulkFetchStatus = styled.div`
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin: 1rem 0;
-  text-align: center;
-  color: #2c3e50;
-`;
-
-const BulkFetchProgress = styled.div`
-  width: 100%;
-  height: 8px;
-  background: #ecf0f1;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 0.5rem 0;
-`;
-
-const BulkFetchProgressFill = styled.div<{ progress: number }>`
-  height: 100%;
-  background: #3498db;
-  width: ${props => props.progress}%;
-  transition: width 0.3s ease;
-`;
-
 type VocabWord = {
   word: string;
   definition: string;
@@ -330,17 +290,16 @@ const VocabBank = () => {
   const [editWord, setEditWord] = useState<VocabWord | null>(null);
   const [loadingWords, setLoadingWords] = useState<Set<number>>(new Set());
   const [apiStatus, setApiStatus] = useState<string>('');
-  const [bulkFetching, setBulkFetching] = useState(false);
-  const [bulkFetchProgress, setBulkFetchProgress] = useState(0);
-  const [bulkFetchStatus, setBulkFetchStatus] = useState('');
+  const [isAddingWord, setIsAddingWord] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (!user) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
     fetch('/api/vocab', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       }
     })
       .then(res => res.json())
@@ -374,6 +333,7 @@ const VocabBank = () => {
     word.word.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Manual fetch function for existing words that don't have definitions
   const fetchWordDefinition = async (word: string, index: number) => {
     // Check if definition is already available and is a proper dictionary definition
     const currentWord = words[index];
@@ -386,16 +346,16 @@ const VocabBank = () => {
     }
     
     setLoadingWords(prev => new Set(prev).add(index));
+    setApiStatus('Fetching definition...');
     
     try {
       const data = await dictionaryApi.getDefinition(word);
-      setApiStatus('Free Dictionary API');
       
       const updatedWord: VocabWord = {
         ...words[index],
         definition: data.definition,
         word: word,
-        example: words[index].example || '',
+        example: words[index].example || data.example || '',
         difficulty: words[index].difficulty || 'BEGINNER',
         pronunciation: data.pronunciation || '',
         partOfSpeech: data.partOfSpeech || '',
@@ -406,47 +366,33 @@ const VocabBank = () => {
       setWords(updatedWords);
       
       // Save the fetched definition to the backend so it persists
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      if (user) {
-        try {
-          console.log('Saving definition to database:', {
+      try {
+        const saveResponse = await fetch('/api/vocab', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
             word: word,
             definition: data.definition,
-            pronunciation: data.pronunciation,
-            partOfSpeech: data.partOfSpeech,
-            synonyms: data.synonyms
-          });
-          
-          const saveResponse = await fetch('/api/vocab', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              word: word,
-              definition: data.definition,
-              example: words[index].example || '',
-              difficulty: words[index].difficulty || 'BEGINNER',
-              pronunciation: data.pronunciation || '',
-              partOfSpeech: data.partOfSpeech || '',
-              synonyms: data.synonyms || ''
-            })
-          });
-          
-          if (saveResponse.ok) {
-            const savedWord = await saveResponse.json();
-            console.log('Definition saved successfully to database:', savedWord);
-            setApiStatus('Definition saved to database');
-          } else {
-            const errorData = await saveResponse.json();
-            console.error('Failed to save definition to database:', errorData);
-            setApiStatus('Failed to save definition to database');
-          }
-        } catch (saveError) {
-          console.error('Could not save definition to backend:', saveError);
-          setApiStatus('Error saving definition to database');
+            example: words[index].example || data.example || '',
+            difficulty: words[index].difficulty || 'BEGINNER',
+            pronunciation: data.pronunciation || '',
+            partOfSpeech: data.partOfSpeech || '',
+            synonyms: data.synonyms || ''
+          })
+        });
+        
+        if (saveResponse.ok) {
+          setApiStatus('Definition updated successfully!');
+          setTimeout(() => setApiStatus(''), 3000);
+        } else {
+          setApiStatus('Failed to save definition');
         }
+      } catch (saveError) {
+        console.error('Could not save definition to backend:', saveError);
+        setApiStatus('Error saving definition');
       }
     } catch (error) {
       console.error('Error fetching definition:', error);
@@ -466,86 +412,69 @@ const VocabBank = () => {
     console.log('Current user:', user);
     if (!user) return;
 
-    if (
-      newMeaning &&
-      newExample &&
-      !words.some(w => w.word === newMeaning)
-    ) {
-      // Auto-fetch dictionary data for the word
-      let dictionaryData = null;
-      let autoFetchedData = {
-        definition: newEnDef || '',
-        pronunciation: '',
-        partOfSpeech: '',
-        synonyms: '',
-        example: newExample
-      };
-
-      try {
-        console.log(`Auto-fetching dictionary data for: ${newMeaning}`);
-        setApiStatus('Auto-fetching definition and pronunciation...');
-        
-        const dictionaryResponse = await fetch(`/api/auth/dictionary/${encodeURIComponent(newMeaning.toLowerCase())}`);
-        if (dictionaryResponse.ok) {
-          dictionaryData = await dictionaryResponse.json();
-          autoFetchedData = {
-            definition: dictionaryData.definition || newEnDef || newMeaning,
-            pronunciation: dictionaryData.pronunciation || '',
-            partOfSpeech: dictionaryData.partOfSpeech || '',
-            synonyms: dictionaryData.synonyms || '',
-            example: newExample
-          };
-          setApiStatus('✓ Auto-fetched definition and pronunciation');
-        } else {
-          console.log('Free Dictionary API not available, using manual input');
-          setApiStatus('Using manual input (API unavailable)');
-        }
-      } catch (error) {
-        console.log('Could not fetch dictionary data:', error);
-        setApiStatus('Using manual input (API error)');
-      }
+    if (newMeaning && !words.some(w => w.word === newMeaning)) {
+      setIsAddingWord(true);
+      setApiStatus('Auto-fetching definition, pronunciation, and example...');
 
       const newWord = {
-        userId: user.id,
         word: newMeaning,
-        definition: autoFetchedData.definition,
-        example: autoFetchedData.example,
+        definition: newEnDef || '', // Will be auto-fetched if empty
+        example: newExample || '', // Will be auto-fetched if empty
         difficulty: 'BEGINNER',
-        pronunciation: autoFetchedData.pronunciation,
-        partOfSpeech: autoFetchedData.partOfSpeech,
-        synonyms: autoFetchedData.synonyms
+        pronunciation: '', // Will be auto-fetched
+        partOfSpeech: '', // Will be auto-fetched
+        synonyms: '' // Will be auto-fetched
       };
-      console.log('Sending new word with auto-fetched data:', newWord);
+      console.log('Sending new word for auto-fetch:', newWord);
 
-      const res = await fetch('/api/vocab', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(newWord)
-      });
-
-      const result = await res.json();
-      console.log('POST /vocab response:', result);
-
-      if (res.ok) {
-        // Refresh vocabulary list
-        fetch('/api/vocab', {
-          headers: {
+      try {
+        const res = await fetch('/api/vocab', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        })
-          .then(res => res.json())
-          .then(data => {
-            console.log('Fetched vocabulary after add:', data);
-            setWords(data);
-          });
-        setNewMeaning('');
-        setNewEnDef('');
-        setNewViDef('');
-        setNewExample('');
-        setApiStatus('✓ Word added with auto-fetched data');
+          },
+          body: JSON.stringify(newWord)
+        });
+
+        const result = await res.json();
+        console.log('POST /vocab response:', result);
+
+        if (res.ok) {
+          setApiStatus('✅ Word saved with auto-fetched data!');
+          
+          // Refresh vocabulary list
+          fetch('/api/vocab', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+            .then(res => res.json())
+            .then(data => {
+              console.log('Fetched vocabulary after add:', data);
+              setWords(data);
+            });
+          
+          // Clear form
+          setNewMeaning('');
+          setNewEnDef('');
+          setNewViDef('');
+          setNewExample('');
+          
+          // Clear status after 3 seconds
+          setTimeout(() => {
+            setApiStatus('');
+            setIsAddingWord(false);
+          }, 3000);
+        } else {
+          setApiStatus('❌ Failed to save word');
+          console.error('Failed to save word:', result);
+          setIsAddingWord(false);
+        }
+      } catch (error) {
+        setApiStatus('❌ Error saving word');
+        console.error('Error saving word:', error);
+        setIsAddingWord(false);
       }
     }
   };
@@ -584,129 +513,14 @@ const VocabBank = () => {
     setEditWord(null);
   };
 
-  const handleBulkFetch = async () => {
-    // Find words that need definitions
-    const wordsNeedingDefinitions = words.filter((word, index) => 
-      !word.definition || 
-      word.definition === word.word || 
-      word.definition.includes('From ') || 
-      word.definition.includes('Saved from')
-    );
-
-    if (wordsNeedingDefinitions.length === 0) {
-      setBulkFetchStatus('All words already have definitions!');
-      return;
-    }
-
-    setBulkFetching(true);
-    setBulkFetchProgress(0);
-    setBulkFetchStatus(`Auto-fetching definitions for ${wordsNeedingDefinitions.length} words...`);
-
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (let i = 0; i < wordsNeedingDefinitions.length; i++) {
-      const word = wordsNeedingDefinitions[i];
-      const wordIndex = words.findIndex(w => w.word === word.word);
-      
-      try {
-        setBulkFetchStatus(`Fetching definition for "${word.word}" (${i + 1}/${wordsNeedingDefinitions.length})...`);
-        
-        const dictionaryResponse = await fetch(`/api/auth/dictionary/${encodeURIComponent(word.word.toLowerCase())}`);
-        if (dictionaryResponse.ok) {
-          const dictionaryData = await dictionaryResponse.json();
-          
-          // Update the word in the database
-          const updateResponse = await fetch('/api/vocab', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              word: word.word,
-              definition: dictionaryData.definition,
-              example: word.example,
-              difficulty: word.difficulty,
-              pronunciation: dictionaryData.pronunciation || '',
-              partOfSpeech: dictionaryData.partOfSpeech || '',
-              synonyms: dictionaryData.synonyms || ''
-            })
-          });
-
-          if (updateResponse.ok) {
-            successCount++;
-          } else {
-            errorCount++;
-          }
-        } else {
-          errorCount++;
-        }
-      } catch (error) {
-        console.error(`Error fetching definition for "${word.word}":`, error);
-        errorCount++;
-      }
-
-      // Update progress
-      const progress = ((i + 1) / wordsNeedingDefinitions.length) * 100;
-      setBulkFetchProgress(progress);
-    }
-
-    setBulkFetching(false);
-    setBulkFetchStatus(`Bulk fetch complete! ${successCount} definitions fetched, ${errorCount} errors.`);
-    
-    // Refresh the vocabulary list
-    fetch('/api/vocab', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setWords(data);
-      });
-  };
-
   return (
     <Container>
       <ReturnBtn onClick={()=>navigate('/dashboard')}>← Dashboard</ReturnBtn>
       <Title>Vocab Bank</Title>
       {apiStatus && (
         <InfoText style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          {apiStatus}
+          Using: {apiStatus}
         </InfoText>
-      )}
-
-      {/* Bulk Fetch Section */}
-      {words.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <BulkFetchButton 
-            onClick={handleBulkFetch} 
-            disabled={bulkFetching}
-            style={{ 
-              opacity: bulkFetching ? 0.6 : 1,
-              cursor: bulkFetching ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {bulkFetching ? '⏳ Auto-fetching...' : '🚀 Auto-fetch All Definitions'}
-          </BulkFetchButton>
-          
-          {bulkFetching && (
-            <BulkFetchStatus>
-              <div>{bulkFetchStatus}</div>
-              <BulkFetchProgress>
-                <BulkFetchProgressFill progress={bulkFetchProgress} />
-              </BulkFetchProgress>
-              <div>{Math.round(bulkFetchProgress)}% complete</div>
-            </BulkFetchStatus>
-          )}
-          
-          {bulkFetchStatus && !bulkFetching && (
-            <BulkFetchStatus>
-              {bulkFetchStatus}
-            </BulkFetchStatus>
-          )}
-        </div>
       )}
       
       {/* Quiz Unlock Progress Card */}
@@ -762,31 +576,26 @@ const VocabBank = () => {
       <AddForm onSubmit={handleAdd}>
         <AddInput
           type="text"
-          placeholder="Word"
+          placeholder="Enter a word (definition, pronunciation, and example will be auto-fetched)"
           value={newMeaning}
           onChange={e => setNewMeaning(e.target.value)}
           required
         />
         <AddInput
           type="text"
-          placeholder="English Definition (optional)"
+          placeholder="Custom Definition (optional - will override auto-fetch)"
           value={newEnDef}
           onChange={e => setNewEnDef(e.target.value)}
         />
         <AddInput
           type="text"
-          placeholder="Vietnamese Definition (optional)"
-          value={newViDef}
-          onChange={e => setNewViDef(e.target.value)}
-        />
-        <AddInput
-          type="text"
-          placeholder="Example"
+          placeholder="Custom Example (optional - will override auto-fetch)"
           value={newExample}
           onChange={e => setNewExample(e.target.value)}
-          required
         />
-        <AddButton type="submit">Add Word</AddButton>
+        <AddButton type="submit" disabled={isAddingWord}>
+          {isAddingWord ? '⏳ Adding...' : 'Add Word'}
+        </AddButton>
       </AddForm>
       <WordList>
         {filteredWords.map((word, idx) => (
