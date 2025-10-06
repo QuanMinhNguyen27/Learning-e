@@ -14,10 +14,11 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'dist',
     rollupOptions: {
       input: {
-        main: './public/index.html',
-        login: './public/login.html'
+        main: './index.html',
+        login: './login.html'
       }
     }
   }

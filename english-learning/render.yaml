@@ -11,6 +11,6 @@ services:
       - key: JWT_SECRET
         value: your-super-secret-jwt-key-change-this-in-production
       - key: CORS_ORIGIN
-        value: https://your-frontend-url.netlify.app
+        value: https://silly-smakager-945b58.netlify.app
       - key: NODE_ENV
         value: production
