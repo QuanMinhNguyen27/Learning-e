@@ -268,6 +268,46 @@ const ReturnBtn = styled.button`
   &:hover { background: #16a085; color: #fff; }
 `;
 
+const BulkFetchButton = styled.button`
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 1rem 0;
+  &:hover {
+    background: #2980b9;
+  }
+`;
+
+const BulkFetchStatus = styled.div`
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  color: #2c3e50;
+`;
+
+const BulkFetchProgress = styled.div`
+  width: 100%;
+  height: 8px;
+  background: #ecf0f1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+`;
+
+const BulkFetchProgressFill = styled.div<{ progress: number }>`
+  height: 100%;
+  background: #3498db;
+  width: ${props => props.progress}%;
+  transition: width 0.3s ease;
+`;
+
 type VocabWord = {
   word: string;
   definition: string;
@@ -290,12 +330,19 @@ const VocabBank = () => {
   const [editWord, setEditWord] = useState<VocabWord | null>(null);
   const [loadingWords, setLoadingWords] = useState<Set<number>>(new Set());
   const [apiStatus, setApiStatus] = useState<string>('');
+  const [bulkFetching, setBulkFetching] = useState(false);
+  const [bulkFetchProgress, setBulkFetchProgress] = useState(0);
+  const [bulkFetchStatus, setBulkFetchStatus] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user) return;
-    fetch(`/api/auth/vocabulary?userId=${user.id}`)
+    fetch('/api/vocab', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         console.log('Fetched vocabulary on mount:', data);
@@ -424,43 +471,71 @@ const VocabBank = () => {
       newExample &&
       !words.some(w => w.word === newMeaning)
     ) {
-      // Fetch Free Dictionary data for the word
+      // Auto-fetch dictionary data for the word
       let dictionaryData = null;
+      let autoFetchedData = {
+        definition: newEnDef || '',
+        pronunciation: '',
+        partOfSpeech: '',
+        synonyms: '',
+        example: newExample
+      };
+
       try {
+        console.log(`Auto-fetching dictionary data for: ${newMeaning}`);
+        setApiStatus('Auto-fetching definition and pronunciation...');
+        
         const dictionaryResponse = await fetch(`/api/auth/dictionary/${encodeURIComponent(newMeaning.toLowerCase())}`);
         if (dictionaryResponse.ok) {
           dictionaryData = await dictionaryResponse.json();
+          autoFetchedData = {
+            definition: dictionaryData.definition || newEnDef || newMeaning,
+            pronunciation: dictionaryData.pronunciation || '',
+            partOfSpeech: dictionaryData.partOfSpeech || '',
+            synonyms: dictionaryData.synonyms || '',
+            example: newExample
+          };
+          setApiStatus('✓ Auto-fetched definition and pronunciation');
         } else {
-          console.log('Free Dictionary API not available, using fallback');
+          console.log('Free Dictionary API not available, using manual input');
+          setApiStatus('Using manual input (API unavailable)');
         }
       } catch (error) {
         console.log('Could not fetch dictionary data:', error);
+        setApiStatus('Using manual input (API error)');
       }
 
       const newWord = {
         userId: user.id,
         word: newMeaning,
-        definition: newEnDef || dictionaryData?.definition || newMeaning,
-        example: newExample,
+        definition: autoFetchedData.definition,
+        example: autoFetchedData.example,
         difficulty: 'BEGINNER',
-        pronunciation: dictionaryData?.pronunciation || '',
-        partOfSpeech: dictionaryData?.partOfSpeech || '',
-        synonyms: dictionaryData?.synonyms || ''
+        pronunciation: autoFetchedData.pronunciation,
+        partOfSpeech: autoFetchedData.partOfSpeech,
+        synonyms: autoFetchedData.synonyms
       };
-      console.log('Sending new word:', newWord);
+      console.log('Sending new word with auto-fetched data:', newWord);
 
-      const res = await fetch('/api/auth/vocabulary', {
+      const res = await fetch('/api/vocab', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(newWord)
       });
 
       const result = await res.json();
-      console.log('POST /vocabulary response:', result);
+      console.log('POST /vocab response:', result);
 
       if (res.ok) {
         // Refresh vocabulary list
-        fetch(`/api/auth/vocabulary?userId=${user.id}`)
+        fetch('/api/vocab', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
           .then(res => res.json())
           .then(data => {
             console.log('Fetched vocabulary after add:', data);
@@ -470,6 +545,7 @@ const VocabBank = () => {
         setNewEnDef('');
         setNewViDef('');
         setNewExample('');
+        setApiStatus('✓ Word added with auto-fetched data');
       }
     }
   };
@@ -508,14 +584,129 @@ const VocabBank = () => {
     setEditWord(null);
   };
 
+  const handleBulkFetch = async () => {
+    // Find words that need definitions
+    const wordsNeedingDefinitions = words.filter((word, index) => 
+      !word.definition || 
+      word.definition === word.word || 
+      word.definition.includes('From ') || 
+      word.definition.includes('Saved from')
+    );
+
+    if (wordsNeedingDefinitions.length === 0) {
+      setBulkFetchStatus('All words already have definitions!');
+      return;
+    }
+
+    setBulkFetching(true);
+    setBulkFetchProgress(0);
+    setBulkFetchStatus(`Auto-fetching definitions for ${wordsNeedingDefinitions.length} words...`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < wordsNeedingDefinitions.length; i++) {
+      const word = wordsNeedingDefinitions[i];
+      const wordIndex = words.findIndex(w => w.word === word.word);
+      
+      try {
+        setBulkFetchStatus(`Fetching definition for "${word.word}" (${i + 1}/${wordsNeedingDefinitions.length})...`);
+        
+        const dictionaryResponse = await fetch(`/api/auth/dictionary/${encodeURIComponent(word.word.toLowerCase())}`);
+        if (dictionaryResponse.ok) {
+          const dictionaryData = await dictionaryResponse.json();
+          
+          // Update the word in the database
+          const updateResponse = await fetch('/api/vocab', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              word: word.word,
+              definition: dictionaryData.definition,
+              example: word.example,
+              difficulty: word.difficulty,
+              pronunciation: dictionaryData.pronunciation || '',
+              partOfSpeech: dictionaryData.partOfSpeech || '',
+              synonyms: dictionaryData.synonyms || ''
+            })
+          });
+
+          if (updateResponse.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        console.error(`Error fetching definition for "${word.word}":`, error);
+        errorCount++;
+      }
+
+      // Update progress
+      const progress = ((i + 1) / wordsNeedingDefinitions.length) * 100;
+      setBulkFetchProgress(progress);
+    }
+
+    setBulkFetching(false);
+    setBulkFetchStatus(`Bulk fetch complete! ${successCount} definitions fetched, ${errorCount} errors.`);
+    
+    // Refresh the vocabulary list
+    fetch('/api/vocab', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setWords(data);
+      });
+  };
+
   return (
     <Container>
       <ReturnBtn onClick={()=>navigate('/dashboard')}>← Dashboard</ReturnBtn>
       <Title>Vocab Bank</Title>
       {apiStatus && (
         <InfoText style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          Using: {apiStatus}
+          {apiStatus}
         </InfoText>
+      )}
+
+      {/* Bulk Fetch Section */}
+      {words.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <BulkFetchButton 
+            onClick={handleBulkFetch} 
+            disabled={bulkFetching}
+            style={{ 
+              opacity: bulkFetching ? 0.6 : 1,
+              cursor: bulkFetching ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {bulkFetching ? '⏳ Auto-fetching...' : '🚀 Auto-fetch All Definitions'}
+          </BulkFetchButton>
+          
+          {bulkFetching && (
+            <BulkFetchStatus>
+              <div>{bulkFetchStatus}</div>
+              <BulkFetchProgress>
+                <BulkFetchProgressFill progress={bulkFetchProgress} />
+              </BulkFetchProgress>
+              <div>{Math.round(bulkFetchProgress)}% complete</div>
+            </BulkFetchStatus>
+          )}
+          
+          {bulkFetchStatus && !bulkFetching && (
+            <BulkFetchStatus>
+              {bulkFetchStatus}
+            </BulkFetchStatus>
+          )}
+        </div>
       )}
       
       {/* Quiz Unlock Progress Card */}
