@@ -10,6 +10,10 @@ services:
         fromDatabase:
           name: english_learning_ms5b
           property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: english_learning_ms5b
+          property: connectionString
       - key: JWT_SECRET
         value: your-super-secret-jwt-key-change-this-in-production
       - key: CORS_ORIGIN
