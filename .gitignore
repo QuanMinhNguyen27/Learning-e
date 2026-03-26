@@ -9,3 +9,7 @@ uploads/
 # Prisma sqlite/dev db (if used)
 *.db
 *.sqlite
+
+# Allow committed demo uploads (tracked via Git LFS)
+!english-learning/BE/uploads/
+!english-learning/BE/uploads/**

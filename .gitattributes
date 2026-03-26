@@ -1,0 +1,1 @@
+english-learning/BE/uploads/**/*.{mp4,webm,ogg,mp3,wav,jpg,jpeg,png,gif} filter=lfs diff=lfs merge=lfs -text
