@@ -12,6 +12,16 @@ import { prisma } from './prisma';
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 
+// Test database connection on startup for clearer errors
+const testDbConnection = async () => {
+  try {
+    await prisma.$connect();
+    console.log('✅ Connected to database');
+  } catch (error) {
+    console.error('❌ Failed to connect to database:', error);
+  }
+};
+
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'],
   credentials: false
@@ -27,6 +37,20 @@ app.use('/api/vocab', vocabRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/quiz', quizRoutes);
+
+// Global error handling middleware
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('❌ Global error handler caught:', err);
+  if (res.headersSent) {
+    return; // Headers already sent, don't try to send response
+  }
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
+// 404 handler
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Authentication reset functionality
 const resetAuthenticationData = async () => {
@@ -87,9 +111,12 @@ process.on('unhandledRejection', async (reason, promise) => {
   process.exit(1);
 });
 
+// Start the server and immediately try to connect to the database
 const server = app.listen(PORT, () => {
   console.log(`🚀 API listening on http://localhost:${PORT}`);
   console.log('📝 Authentication reset will occur on server shutdown');
+  // Fire-and-forget DB connection test
+  void testDbConnection();
 });
 
 // Export server for testing

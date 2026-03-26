@@ -1,5 +1,7 @@
-// Works with CRA env; for Vite change to import.meta.env.VITE_API_URL
-const BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Works with Vite env; configure VITE_API_URL if needed
+const BASE =
+  (import.meta as any).env?.VITE_API_URL ||
+  '/api';
 
 type User = { id: string; email: string; name?: string };
 export type Vocab = { id?: string; word: string; definition?: string; example?: string; difficulty?: string };

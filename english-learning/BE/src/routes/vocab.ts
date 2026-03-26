@@ -51,11 +51,16 @@ const fetchDictionaryData = async (word: string) => {
 
 // GET current user's vocabulary
 router.get('/', requireAuth, async (req: AuthReq, res) => {
-  const list = await prisma.vocabulary.findMany({
-    where: { userId: req.userId! },
-    orderBy: { createdAt: 'desc' }
-  });
-  res.json(list);
+  try {
+    const list = await prisma.vocabulary.findMany({
+      where: { userId: req.userId! },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(list);
+  } catch (error) {
+    console.error('Error fetching vocabulary:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Add new vocab (or upsert)
@@ -162,33 +167,43 @@ router.post('/', requireAuth, async (req: AuthReq, res) => {
 
 // Update vocab
 router.put('/:id', requireAuth, async (req: AuthReq, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
-  
-  const parsed = addSchema.partial().safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+    
+    const parsed = addSchema.partial().safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
 
-  // Ensure ownership
-  const found = await prisma.vocabulary.findUnique({ where: { id } });
-  if (!found || found.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
+    // Ensure ownership
+    const found = await prisma.vocabulary.findUnique({ where: { id } });
+    if (!found || found.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
 
-  const updateData: any = { ...parsed.data };
-  if (updateData.synonyms && typeof updateData.synonyms === 'string') {
-    updateData.synonyms = updateData.synonyms.split(',').map((s: string) => s.trim());
+    const updateData: any = { ...parsed.data };
+    if (updateData.synonyms && typeof updateData.synonyms === 'string') {
+      updateData.synonyms = updateData.synonyms.split(',').map((s: string) => s.trim());
+    }
+    const updated = await prisma.vocabulary.update({ where: { id }, data: updateData });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating vocabulary:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  const updated = await prisma.vocabulary.update({ where: { id }, data: updateData });
-  res.json(updated);
 });
 
 // Delete vocab
 router.delete('/:id', requireAuth, async (req: AuthReq, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
-  
-  const found = await prisma.vocabulary.findUnique({ where: { id } });
-  if (!found || found.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
-  await prisma.vocabulary.delete({ where: { id } });
-  res.json({ ok: true });
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+    
+    const found = await prisma.vocabulary.findUnique({ where: { id } });
+    if (!found || found.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
+    await prisma.vocabulary.delete({ where: { id } });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Error deleting vocabulary:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

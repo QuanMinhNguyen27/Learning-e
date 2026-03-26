@@ -203,3 +203,9 @@ See the respective configuration files for deployment settings.
 ## License
 
 This project is licensed under the ISC License.
+
+
+
+cd FE ; $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") ; npm start
+
+cd BE ; $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") ; npm run dev

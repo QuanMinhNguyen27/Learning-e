@@ -74,18 +74,23 @@ const regSchema = z.object({
 });
 
 router.post('/register', async (req, res) => {
-  const parsed = regSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
+  try {
+    const parsed = regSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
 
-  const { email, password, name } = parsed.data;
-  const exists = await prisma.user.findUnique({ where: { email } });
-  if (exists) return res.status(409).json({ error: 'Email already in use' });
+    const { email, password, name } = parsed.data;
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists) return res.status(409).json({ error: 'Email already in use' });
 
-  const hash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({ data: { email, password: hash, name } });
+    const hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({ data: { email, password: hash, name } });
 
-  const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 const loginSchema = z.object({
@@ -94,18 +99,23 @@ const loginSchema = z.object({
 });
 
 router.post('/login', async (req, res) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
-  const { email, password } = parsed.data;
+  try {
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid data' });
+    const { email, password } = parsed.data;
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
 
-  const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 router.get('/me', requireAuth, async (req: AuthReq, res) => {
@@ -115,7 +125,8 @@ router.get('/me', requireAuth, async (req: AuthReq, res) => {
       select: { id: true, email: true, name: true, role: true }
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    const safeUser = { id: user.id, email: user.email, name: user.name, role: user.role };
+    res.json({ user: safeUser, data: safeUser });
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal server error' });
